@@ -8,7 +8,7 @@
 
 import Foundation
 
-/*global*/ func logthis(msg:String = "", function: String = __FUNCTION__, file: String = __FILE__, line: Int = __LINE__){
+/*global*/ func logthis(msg:String = "", function: String = #function, file: String = #file, line: Int = #line){
     print("\(LogHelper.makeTag(function, file: file, line: line)) \(msg)")
 }
 
@@ -34,13 +34,13 @@ struct LogHelper {
         var difference = desiredClassNameLength - shortClassName.characters.count
         while difference > 0 {
             shortClassName.append(" " as Character)
-            difference--
+            difference -= 1
         }
         
         difference = minLineNumberLength - lineStr.characters.count
         while difference > 0 {
             lineStr.append(" " as Character)
-            difference--
+            difference -= 1
         }
         
         return "\(lineStr) \(shortClassName) \(function)"

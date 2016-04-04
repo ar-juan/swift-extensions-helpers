@@ -8,7 +8,6 @@
 
 import Foundation
 import CoreData
-import EncryptedCoreData
 
 class ContextHelper {
     let DatabaseAvailabilityNotificationName = "DatabaseAvailabilityNotificationName"
@@ -35,14 +34,17 @@ class ContextHelper {
     private var preparingDocument: Bool = false
     
     func prepareDatabaseWhenDone(whenDone: ((success: Bool, context: NSManagedObjectContext?) -> Void)?) {
+        guard let appName = NSBundle.mainBundle().infoDictionary![kCFBundleNameKey as String] as? String else {
+            fatalError("no appname")
+        }
         
         guard checkAndSetPreparingDocument() == false else { // do this only once
             return
         }
         
         // The managed object model for the application. This property is not optional. It is a fatal error for the application not to be able to find and load its model.
-        guard let modelURL = NSBundle.mainBundle().URLForResource("PwcReportingApp", withExtension: "momd") else {
-            fatalError("error loading NSBundle.mainBundle().URLForResource(\"PwcReportingApp\", withExtension: \"momd\")")
+        guard let modelURL = NSBundle.mainBundle().URLForResource(appName, withExtension: "momd") else {
+            fatalError("error loading NSBundle.mainBundle().URLForResource(\"\(appName)\", withExtension: \"momd\")")
         }
         
         guard let managedObjectModel = NSManagedObjectModel(contentsOfURL: modelURL) else {
@@ -64,7 +66,7 @@ class ContextHelper {
         As part of the initialization of Core Data, assign the adding of the persistent store (NSPersistentStore) to the persistent store coordinator (NSPersistentStoreCoordinator) to a background queue. That action can take an unknown amount of time, and performing it on the main queue can block the user interface, possibly causing the application to terminate.
         */
         dispatch_async(dispatch_get_global_queue(DISPATCH_QUEUE_PRIORITY_BACKGROUND, 0)) {
-            let url = self.applicationDocumentsDirectory.URLByAppendingPathComponent("PwCReportingAppCoreData.sqlite")
+            let url = self.applicationDocumentsDirectory.URLByAppendingPathComponent("\(appName)CoreData.sqlite")
             let failureReason = "There was an error creating or loading the application's saved data."
             do {
                 let options = [NSMigratePersistentStoresAutomaticallyOption: true, NSInferMappingModelAutomaticallyOption: true]
