@@ -14,17 +14,17 @@ extension UIFont {
             return false
         }
         
-        let knownTextStyles: [String] =
+        var knownTextStyles: [String] =
         [UIFontTextStyleBody,
             UIFontTextStyleHeadline,
             UIFontTextStyleSubheadline,
-            UIFontTextStyleCallout,
             UIFontTextStyleCaption1,
             UIFontTextStyleCaption2,
-            UIFontTextStyleFootnote,
-            UIFontTextStyleTitle1,
-            UIFontTextStyleTitle2,
-            UIFontTextStyleTitle3]
+            UIFontTextStyleFootnote]
+        
+        if #available(iOS 9.0, *) {
+            knownTextStyles += [UIFontTextStyleCallout,UIFontTextStyleTitle1,UIFontTextStyleTitle2,UIFontTextStyleTitle3]
+        }
         
         return knownTextStyles.contains(style!)
     }
@@ -47,13 +47,14 @@ extension UIFont {
         static let Body = AppFont.FromTextStyle(UIFontTextStyleBody)
         static let Headline = AppFont.FromTextStyle(UIFontTextStyleHeadline)
         static let SubHeadline = AppFont.FromTextStyle(UIFontTextStyleSubheadline)
-        static let Callout = AppFont.FromTextStyle(UIFontTextStyleCallout)
         static let Caption1 = AppFont.FromTextStyle(UIFontTextStyleCaption1)
         static let Caption2 = AppFont.FromTextStyle(UIFontTextStyleCaption2)
         static let Footnote = AppFont.FromTextStyle(UIFontTextStyleFootnote)
-        static let Title1 = AppFont.FromTextStyle(UIFontTextStyleTitle1)
-        static let Title2 = AppFont.FromTextStyle(UIFontTextStyleTitle2)
-        static let Title3 = AppFont.FromTextStyle(UIFontTextStyleTitle3)
+        
+        @available(iOS 9.0, *)static let Callout = AppFont.FromTextStyle(UIFontTextStyleCallout)
+        @available(iOS 9.0, *) static let Title1 = AppFont.FromTextStyle(UIFontTextStyleTitle1)
+        @available(iOS 9.0, *) static let Title2 = AppFont.FromTextStyle(UIFontTextStyleTitle2)
+        @available(iOS 9.0, *) static let Title3 = AppFont.FromTextStyle(UIFontTextStyleTitle3)
         
         
         /**
