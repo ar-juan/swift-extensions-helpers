@@ -50,8 +50,8 @@ private class ConnectionManager {
     
     private static func urlSessionForType(type: PostType) -> NSURLSession {
         switch type {
-        case .JSON: return ephemeralURLSession
-        default: return ephemeralJSONURLSession
+        case .JSON: return ephemeralJSONURLSession
+        default: return ephemeralURLSession
         }
     }
     
@@ -62,7 +62,8 @@ private class ConnectionManager {
     }()
     private static let ephemeralJSONURLSession: NSURLSession = { // stackoverflow.com/questions/35793445/
         let configuration = NSURLSessionConfiguration.ephemeralSessionConfiguration()
-        configuration.HTTPAdditionalHeaders!["Content-Type"] = "application/json"
+        if configuration.HTTPAdditionalHeaders == nil { configuration.HTTPAdditionalHeaders = ["Content-Type" : "application/json"] }
+        else { configuration.HTTPAdditionalHeaders!["Content-Type"] = ["application/json"] }
         return NSURLSession(configuration: configuration)
     }()
     
@@ -106,11 +107,11 @@ private class ConnectionManager {
             let request = NSMutableURLRequest(URL: url)
             
             // iOS 8.3 has a bug where the http headers of the configuration are not used. Set them also on the request.
-            let headers = session.configuration.HTTPAdditionalHeaders!
-            for (key, value) in headers {
-                request.addValue(value as! String, forHTTPHeaderField: key as! String)
+            if let headers = session.configuration.HTTPAdditionalHeaders {
+                for (key, value) in headers {
+                    request.addValue(value as! String, forHTTPHeaderField: key as! String)
+                }
             }
-            
             request.HTTPMethod = "POST"
             request.HTTPBody = data
             request.timeoutInterval = 120
@@ -216,7 +217,13 @@ class AppConnectionManager {
         UIApplication.sharedApplication().networkActivityIndicatorVisible = true
         let session = ConnectionManager.ephemeralURLSession // connectionManager.ephemeralURLSession
         connectionManager.getDatawithURLString(urlString, usingSession: session) { (responseData: NSData?, response: NSURLResponse?, error: NSError?) -> Void in
-            let httpResponse = response as! NSHTTPURLResponse
+            guard let httpResponse = response as? NSHTTPURLResponse else {
+                logthis("response is nil")
+                errorHandler?()
+                UIApplication.sharedApplication().networkActivityIndicatorVisible = false
+                return
+            }
+            
             //let urlError = error as! NSURLError
             let statusCode = httpResponse.statusCode
             if statusCode/100 == 2 {
@@ -260,7 +267,13 @@ class AppConnectionManager {
         UIApplication.sharedApplication().networkActivityIndicatorVisible = true
         let session = ConnectionManager.urlSessionForType(.JSON)
         ConnectionManager.sharedConnectionManager.postData(postData, toURLString: urlString, usingSession: session) { (responseData: NSData?, response: NSURLResponse?, error: NSError?, request: NSURLRequest?) -> Void in
-            let httpResponse: NSHTTPURLResponse = response as! NSHTTPURLResponse
+            guard let httpResponse = response as? NSHTTPURLResponse else {
+                logthis("response is nil")
+                errorHandler?()
+                UIApplication.sharedApplication().networkActivityIndicatorVisible = false
+                return
+            }
+            
             let statusCode = httpResponse.statusCode
             
             if statusCode / 100 == 2 {
