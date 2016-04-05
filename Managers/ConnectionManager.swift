@@ -94,7 +94,7 @@ private class ConnectionManager {
         var bgTask: UIBackgroundTaskIdentifier?
         
         let application = UIApplication.sharedApplication()
-        bgTask = application.beginBackgroundTaskWithName("nl.Auxilium.App.PostData", expirationHandler: { () -> Void in
+        bgTask = application.beginBackgroundTaskWithName("\(NSBundle.mainBundle().bundleIdentifier).PostData", expirationHandler: { () -> Void in
             // Clean up any unfinished task business by marking where you
             // stopped or ending the task outright.
             application.endBackgroundTask(bgTask!)
@@ -130,7 +130,7 @@ private class ConnectionManager {
         var bgTask: UIBackgroundTaskIdentifier?
         
         let application = UIApplication.sharedApplication()
-        bgTask = application.beginBackgroundTaskWithName("nl.Auxilium.App.GetData", expirationHandler: { () -> Void in
+        bgTask = application.beginBackgroundTaskWithName("\(NSBundle.mainBundle().bundleIdentifier).GetData", expirationHandler: { () -> Void in
             // Clean up any unfinished task business by marking where you
             // stopped or ending the task outright.
             application.endBackgroundTask(bgTask!)
