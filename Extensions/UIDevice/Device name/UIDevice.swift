@@ -48,4 +48,18 @@ extension UIDevice {
         }
     }
     
+    var iOSVersion: Double {
+        //let device = UIDevice.currentDevice()
+        return NSString(string: self.systemVersion).doubleValue
+    }
+    
+    /**
+     Thi is a UUID that may be used to uniquely identify the device, but is the 
+     same across apps from a single vendor. Also, it will reset once all apps of 
+     that vendor are removed.
+     */
+    var uniqueVendorId: String? {
+        let uniqueId = identifierForVendor
+        return uniqueId?.UUIDString
+    }
 }
