@@ -99,8 +99,7 @@ class LoginManager {
                         completionHandler?(success: false, responseDict: nil)
                     }
                     
-                }, onError: {
-                    
+                }, onError: { (statusCode: Int) in
                     completionHandler?(success: false, responseDict: nil)
                     
                 }, attemptNumber: 1)

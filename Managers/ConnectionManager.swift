@@ -161,7 +161,7 @@ class AppConnectionManager {
     static let sharedInstance = AppConnectionManager()
     private let connectionManager = ConnectionManager.sharedConnectionManager
     private init() {}
-    private let maxAttempts = 3
+    private let maxAttempts = 2
     private let maxResponseBodySizeForLog = 200
     private let logMuch: Bool = false
     
@@ -207,10 +207,10 @@ class AppConnectionManager {
     
     
     
-    func getAppDatawithURLString(urlString: String, onSuccess successHandler: ((responseData: NSData?, httpResponse: NSHTTPURLResponse?) -> Void)?, onError errorHandler: (() -> Void)?, attemptNumber attempt: Int) {
-        if attempt >= maxAttempts {
+    func getAppDatawithURLString(urlString: String, onSuccess successHandler: ((responseData: NSData?, httpResponse: NSHTTPURLResponse?) -> Void)?, onError errorHandler: ((statusCode: Int) -> Void)?, attemptNumber attempt: Int) {
+        if attempt > maxAttempts {
             logthis("Max attempt reached")
-            errorHandler?()
+            errorHandler?(statusCode: 0)
             return
         }
         // Implement... if then else etc
@@ -219,7 +219,7 @@ class AppConnectionManager {
         connectionManager.getDatawithURLString(urlString, usingSession: session) { (responseData: NSData?, response: NSURLResponse?, error: NSError?) -> Void in
             guard let httpResponse = response as? NSHTTPURLResponse else {
                 logthis("response is nil")
-                errorHandler?()
+                errorHandler?(statusCode: 0)
                 UIApplication.sharedApplication().networkActivityIndicatorVisible = false
                 return
             }
@@ -233,11 +233,14 @@ class AppConnectionManager {
                 var failureText: String = "-"
                 self.logResult("get error", forUrlString: urlString, session: session, responseData: responseData, httpResponse: httpResponse, request: nil, error: error)
                 if statusCode/100 == 5 {
-                    failureText = "Server unavailable for url: \(urlString)\r\n Trying again now."
+                    failureText = "Server error for url: \(urlString)\r\n Trying again now."
                     self.getAppDatawithURLString(urlString, onSuccess: successHandler, onError: errorHandler, attemptNumber: attempt+1)
                 } else if statusCode == 400 {
                     failureText = "Bad request"
-                    errorHandler?()
+                    errorHandler?(statusCode: statusCode)
+                } else if statusCode == 401 {
+                    failureText = "Unauthorized"
+                    errorHandler?(statusCode: statusCode)
                 } else if error != nil {
                     if error?.code == NSURLError.TimedOut.rawValue {
                         self.logResult("time out", forUrlString: urlString, session: session, responseData: responseData, httpResponse: httpResponse, request: nil, error: error)
@@ -245,10 +248,10 @@ class AppConnectionManager {
                         self.logResult("get error", forUrlString: urlString, session: session, responseData: responseData, httpResponse: httpResponse, request: nil, error: error)
                     }
                     //failureText = "Error: \(error?.code) - \(error?.domain)\r\nDescription: \(error?.localizedDescription) \r\nFailure reason: \(error?.localizedFailureReason) \r\nUserinfo: \(error?.userInfo)"
-                    errorHandler?()
+                    errorHandler?(statusCode: statusCode)
                 } else {
                     failureText = "No error but anyways something wrong in getting data"
-                    errorHandler?()
+                    errorHandler?(statusCode: statusCode)
                 }
                 logthis("Extra information: \r\n\(failureText)")
             }
@@ -256,10 +259,10 @@ class AppConnectionManager {
         }
     }
     
-    func postAppData(postData: NSData, toURLString urlString: String, postType type: PostType, onSuccess successHandler:((responseData: NSData?) -> Void)?, onError errorHandler: (() -> Void)?, attemptNumber attempt: Int) {
-        if attempt >= maxAttempts {
+    func postAppData(postData: NSData, toURLString urlString: String, postType type: PostType, onSuccess successHandler:((responseData: NSData?) -> Void)?, onError errorHandler: ((statusCode: Int) -> Void)?, attemptNumber attempt: Int) {
+        if attempt > maxAttempts {
             logthis("Max attempt reached")
-            errorHandler?()
+            errorHandler?(statusCode: 0)
             return
         }
         // if no application token, get token etc
@@ -269,7 +272,7 @@ class AppConnectionManager {
         ConnectionManager.sharedConnectionManager.postData(postData, toURLString: urlString, usingSession: session) { (responseData: NSData?, response: NSURLResponse?, error: NSError?, request: NSURLRequest?) -> Void in
             guard let httpResponse = response as? NSHTTPURLResponse else {
                 logthis("response is nil")
-                errorHandler?()
+                errorHandler?(statusCode: 0)
                 UIApplication.sharedApplication().networkActivityIndicatorVisible = false
                 return
             }
@@ -287,10 +290,13 @@ class AppConnectionManager {
                     self.postAppData(postData, toURLString: urlString, postType: type, onSuccess: successHandler, onError: errorHandler, attemptNumber: attempt+1)
                 } else if statusCode == 400 {
                     failureText = "Bad request"
-                    errorHandler?()
+                    errorHandler?(statusCode: statusCode)
+                } else if statusCode == 401 {
+                    failureText = "Unauthorized"
+                    errorHandler?(statusCode: statusCode)
                 } else {
                     if error == nil { failureText = "No error but anyways something wrong in posting data" }
-                    errorHandler?()
+                    errorHandler?(statusCode: statusCode)
                 }
                 self.logResult("posting error", forUrlString: urlString, session: session, responseData: responseData, httpResponse: httpResponse, request: request, error: error)
                 logthis("extra information: \(failureText)")
