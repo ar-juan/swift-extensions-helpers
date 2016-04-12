@@ -241,6 +241,9 @@ class AppConnectionManager {
                 } else if statusCode == 401 {
                     failureText = "Unauthorized"
                     errorHandler?(statusCode: statusCode)
+                } else if statusCode == 403 {
+                    failureText = "Forbidden"
+                    errorHandler?(statusCode: statusCode)
                 } else if error != nil {
                     if error?.code == NSURLError.TimedOut.rawValue {
                         self.logResult("time out", forUrlString: urlString, session: session, responseData: responseData, httpResponse: httpResponse, request: nil, error: error)
@@ -293,6 +296,9 @@ class AppConnectionManager {
                     errorHandler?(statusCode: statusCode)
                 } else if statusCode == 401 {
                     failureText = "Unauthorized"
+                    errorHandler?(statusCode: statusCode)
+                } else if statusCode == 403 {
+                    failureText = "Forbidden"
                     errorHandler?(statusCode: statusCode)
                 } else {
                     if error == nil { failureText = "No error but anyways something wrong in posting data" }
