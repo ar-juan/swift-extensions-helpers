@@ -11,7 +11,7 @@ import UIKit
 extension UIAlertController {
     
     func show() {
-        present(animated: true, completion: nil)
+        present(animated: false, completion: nil)
     }
     
     func present(animated animated: Bool, completion: (() -> Void)?) {
@@ -28,8 +28,14 @@ extension UIAlertController {
             if let tabVC = controller as? UITabBarController,
                 let selectedVC = tabVC.selectedViewController {
                 presentFromController(selectedVC, animated: animated, completion: completion)
-            } else {
-                controller.presentViewController(self, animated: animated, completion: completion);
-        }
+            }
+            else
+            {
+                if controller.view.window != nil { // if controller is on screen
+                //NSOperationQueue.mainQueue().addOperationWithBlock {
+                    controller.presentViewController(self, animated: animated, completion: completion)
+                //    }
+                }
+            }
     }
 }

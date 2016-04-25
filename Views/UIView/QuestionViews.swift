@@ -40,7 +40,6 @@ class TwoOptionsQuestionView: UIView {
     private var rightOptionTitle: String? { get { return rightOption.currentTitle } set { rightOption.setTitle(newValue, forState: .Normal) } }
     
     override init(frame: CGRect) {
-        logthis("Please use init(leftOptionTitle: String, rightOptionTitle: String, delegate: TwoOptionsQuestionViewDelegate)")
         super.init(frame: frame)
         setup()
     }
