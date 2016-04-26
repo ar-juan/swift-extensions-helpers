@@ -114,7 +114,6 @@ class TwoOptionsQuestionView: UIView {
     func optionChosen(sender: UIButton) {
         delegate?.choseOptionWithTitle(sender.currentTitle, ofTwoOptionsQuestionView: self)
         selectOptionWithTitle(sender.currentTitle)
-        print("\(#function): \(sender.currentTitle)")
     }
     
     private func setOptionInfo(option: UIButton) {
