@@ -88,7 +88,7 @@ class LoginManager {
                                 return
                         }
                         
-                        print("json: \(json)")
+                        //logthis("json: \(json)")
                         completionHandler?(success: true, responseDict: json)
                     }
                         

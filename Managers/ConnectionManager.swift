@@ -311,4 +311,70 @@ class AppConnectionManager {
         }
     }
     
+    
+    /**
+     Checks if
+     - `JSONPostData` is valid JSON,
+     - Tries to parse it into JSON,
+     - Expects JSON response from web server.
+     - Tries to parse JSON response into a property list
+     
+     and calls the `completionHandler` early if it encounters errors.
+     - parameter JSONPostData: some valid JSON which will be sent to the web server
+     - parameter URLString
+     - parameter completionHandler: `success` is false when
+     - `JSONPostData` is invalid JSON,
+     - web server returns nothing valuable,
+     - response is no valid JSON.
+     
+     In case of a valid JSON response, `completionHandler(success:true, responseDict:json)` is called.
+     */
+    func postJSONAppData(JSONPostData: Dictionary<String, AnyObject>, URLString: String, completionHandler: ((success: Bool, responseDict: [String:AnyObject]?) -> Void)?) {
+        
+        if !NSJSONSerialization.isValidJSONObject(JSONPostData) {
+            logthis("no valid JSON")
+            completionHandler?(success: false, responseDict: nil)
+        }
+        
+        do {
+            let jsonData = try NSJSONSerialization.dataWithJSONObject(JSONPostData, options: [])
+            AppConnectionManager.sharedInstance.postAppData(jsonData,
+                                                            toURLString: URLString,
+                                                            postType: PostType.JSON,
+                                                            onSuccess: { (responseData: NSData?) in
+                                                                guard let data = responseData else {
+                                                                    completionHandler?(success: false, responseDict: nil)
+                                                                    return
+                                                                }
+                                                                
+                                                                do
+                                                                    
+                                                                {
+                                                                    guard let json =
+                                                                        try NSJSONSerialization.JSONObjectWithData(data, options: []) as? [String:AnyObject] else {
+                                                                            
+                                                                            completionHandler?(success: false, responseDict: nil)
+                                                                            return
+                                                                    }
+                                                                    
+                                                                    //logthis("json: \(json)")
+                                                                    completionHandler?(success: true, responseDict: json)
+                                                                }
+                                                                    
+                                                                catch let error as NSError
+                                                                    
+                                                                {
+                                                                    logthis(error.localizedDescription)
+                                                                    completionHandler?(success: false, responseDict: nil)
+                                                                }
+                                                                
+                }, onError: { (statusCode: Int) in
+                    completionHandler?(success: false, responseDict: nil)
+                    
+                }, attemptNumber: 1)
+        } catch {
+            logthis("error creating JSON")
+        }
+    }
+    
 }
