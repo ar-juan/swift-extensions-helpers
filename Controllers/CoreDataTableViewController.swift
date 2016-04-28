@@ -62,8 +62,8 @@ class CoreDataTableViewController: UITableViewController, NSFetchedResultsContro
     var fetchedResultsController: NSFetchedResultsController? {
         get {
             if _fetchedResultsController == nil && !warned {
-                logthis("Note: Subclass must setup fetchedResultsController. Ignore this warning if you set it up later in the view controller life cycle")
-                warned = true
+                //logthis("Note: Subclass must setup fetchedResultsController. Ignore this warning if you set it up later in the view controller life cycle")
+                //warned = true
             }
             return _fetchedResultsController
             
