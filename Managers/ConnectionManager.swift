@@ -329,11 +329,15 @@ class AppConnectionManager {
      
      In case of a valid JSON response, `completionHandler(success:true, responseDict:json)` is called.
      */
-    func postJSONAppData(JSONPostData: Dictionary<String, AnyObject>, URLString: String, completionHandler: ((success: Bool, responseDict: [String:AnyObject]?) -> Void)?) {
-        
+    func postJSONAppData(JSONPostData: Dictionary<String, AnyObject>, URLString: String, completionHandler: ((success: Bool, responseDict: [String:AnyObject]?, statusCode: Int?) -> Void)?, attempt: Int) {
+        if attempt > maxAttempts {
+            logthis("Max attempt reached")
+            completionHandler?(success: false, responseDict: nil, statusCode: nil)
+            return
+        }
         if !NSJSONSerialization.isValidJSONObject(JSONPostData) {
             logthis("no valid JSON")
-            completionHandler?(success: false, responseDict: nil)
+            completionHandler?(success: false, responseDict: nil, statusCode: nil)
         }
         
         do {
@@ -343,7 +347,7 @@ class AppConnectionManager {
                                                             postType: PostType.JSON,
                                                             onSuccess: { (responseData: NSData?) in
                                                                 guard let data = responseData else {
-                                                                    completionHandler?(success: false, responseDict: nil)
+                                                                    completionHandler?(success: false, responseDict: nil, statusCode: nil)
                                                                     return
                                                                 }
                                                                 
@@ -353,24 +357,22 @@ class AppConnectionManager {
                                                                     guard let json =
                                                                         try NSJSONSerialization.JSONObjectWithData(data, options: []) as? [String:AnyObject] else {
                                                                             
-                                                                            completionHandler?(success: false, responseDict: nil)
+                                                                            completionHandler?(success: false, responseDict: nil, statusCode: nil)
                                                                             return
                                                                     }
                                                                     
-                                                                    //logthis("json: \(json)")
-                                                                    completionHandler?(success: true, responseDict: json)
+                                                                    completionHandler?(success: true, responseDict: json, statusCode: nil)
                                                                 }
                                                                     
                                                                 catch let error as NSError
                                                                     
                                                                 {
                                                                     logthis(error.localizedDescription)
-                                                                    completionHandler?(success: false, responseDict: nil)
+                                                                    completionHandler?(success: false, responseDict: nil, statusCode: nil)
                                                                 }
                                                                 
                 }, onError: { (statusCode: Int) in
-                    completionHandler?(success: false, responseDict: nil)
-                    
+                    completionHandler?(success: false, responseDict: nil, statusCode: statusCode)
                 }, attemptNumber: 1)
         } catch {
             logthis("error creating JSON")
