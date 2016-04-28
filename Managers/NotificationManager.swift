@@ -158,6 +158,9 @@ class NotificationManager {
         if var tokenString: String = properties.deviceToken?.description.stringByTrimmingCharactersInSet(NSCharacterSet(charactersInString: "<>")) {
             tokenString = tokenString.stringByReplacingOccurrencesOfString(" ", withString: "")
             delegate?.prepared(token: tokenString)
+            if delegate == nil {
+                logthis("Did you forget to set the delegate of the NotificationManager (see example implementation on top of file)?")
+            }
             //UserDefaults.NotificationDeviceToken = tokenString
         } else {
             // there's no token yet. In case the user said NO, it will never come
@@ -196,6 +199,9 @@ class NotificationManager {
             if var tokenString: String = properties.deviceToken?.description.stringByTrimmingCharactersInSet(NSCharacterSet(charactersInString: "<>")) {
                 tokenString = tokenString.stringByReplacingOccurrencesOfString(" ", withString: "")
                 delegate?.prepared(token: tokenString)
+                if delegate == nil {
+                    logthis("Did you forget to set the delegate of the NotificationManager (see example implementation on top of file)?")
+                }
             }
         } else {
             // in case of ios 8, we also request permission for (remote and local) user notifs (UI-based)
@@ -208,6 +214,9 @@ class NotificationManager {
                 var tokenString = deviceToken.description.stringByTrimmingCharactersInSet(NSCharacterSet(charactersInString: "<>"))
                 tokenString = tokenString.stringByReplacingOccurrencesOfString(" ", withString: "")
                 delegate?.prepared(token: tokenString)
+                if delegate == nil {
+                    logthis("Did you forget to set the delegate of the NotificationManager (see example implementation on top of file)?")
+                }
                 //UserDefaults.NotificationDeviceToken = tokenString
             } else {
                 // didRegisterUserNotificationSettings still has to be called (but might never)
