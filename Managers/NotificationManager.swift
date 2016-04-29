@@ -8,6 +8,8 @@
 
 import UIKit
 
+//TODO: Nadenken of ik niet beter alles gewoon weer in de extension van de appdelegate kan plaatsen, en shouldRegisterForRemoteNotifications shouldRegisterForUserNotifications in de hoof AppDelegate zet
+
 //// Example implementation
 /**
  This app specific notification manager should be used as the central point for
@@ -15,7 +17,7 @@ import UIKit
  - showing a notification to the user
  In the appDelegate, you should call `JeevesNotificationManager.sharedInstance.prepareForApplication()`
  */
-//class JeevesNotificationManager: NotificationManagerDelegate { // Jeeves
+//class JeevesN otificationManager: NotificationManagerDelegate { // Jeeves
 //    let sharedInstance = JeevesNotificationManager()
 //    let manager = NotificationManager.sharedInstance
 //    
@@ -45,6 +47,8 @@ import UIKit
 
 protocol NotificationManagerDelegate {
     func prepared(token token: String)
+    func handleRemoteNotificationWithUserInfo(userInfo: [NSObject: AnyObject], whenDone completion: ((UIBackgroundFetchResult)->Void))
+    func handleLocalNotification(notification: UILocalNotification)
 }
 class NotificationManager {
     static let sharedInstance = NotificationManager() // Singleton pattern
@@ -76,7 +80,7 @@ class NotificationManager {
         static var didReceiveRemoteNotificationFetchCompletionHandler: ((UIBackgroundFetchResult) -> Void)? {
             didSet {
                 // in case FetchCompletionHandler is not called by the app, call it anyways
-                didReceiveRemoteNotificationFetchCompletionHandlerTimer = NSTimer(timeInterval: 10, target: UIApplication.sharedApplication().delegate! /* == self */, selector: #selector(AppDelegate.runDidReceiveRemoteNotificationFetchCompletionHandlerIfFailed(_:)), userInfo: nil, repeats: false)
+                didReceiveRemoteNotificationFetchCompletionHandlerTimer = NSTimer(timeInterval: 10, target: UIApplication.sharedApplication().delegate! /* == self */, selector: #selector(NotificationManager.runDidReceiveRemoteNotificationFetchCompletionHandlerIfFailed(_:)), userInfo: nil, repeats: false)
             }
         }
     }
@@ -249,7 +253,7 @@ class NotificationManager {
     
     
     // MARK: remote notification fetch completion handler
-    func runDidReceiveRemoteNotificationFetchCompletionHandler() {
+    func runDidReceiveRemoteNotificationFetchCompletionHandler(result: UIBackgroundFetchResult) {
         // If we're gonna call the completion handler, then we're at a point in time BEFORE the timer expired, so we
         // don't need that timer anymore.
         if properties.didReceiveRemoteNotificationFetchCompletionHandlerTimer != nil {
@@ -266,7 +270,7 @@ class NotificationManager {
             completionHandler?(UIBackgroundFetchResult.NewData)
         }
     }
-    func runDidReceiveRemoteNotificationFetchCompletionHandlerIfFailed(timer: NSTimer?) {
+    @objc func runDidReceiveRemoteNotificationFetchCompletionHandlerIfFailed(timer: NSTimer?) {
         // If we're gonna call the completion handler, then we're at a point in time AT the timer expired, so we
         // don't need that timer anymore.
         if properties.didReceiveRemoteNotificationFetchCompletionHandlerTimer != nil {
@@ -281,4 +285,49 @@ class NotificationManager {
         }
     }
     
+    
+    // MARK: remote notification handling
+    func application(application: UIApplication, didReceiveLocalNotification notification: UILocalNotification) {
+    logthis();
+        delegate?.handleLocalNotification(notification)
+        if delegate == nil {
+            logthis("Did you forget to set the delegate of the NotificationManager (see example implementation on top of file)?")
+        }
+        
+        // example
+//        if let _ = notification.userInfo, let body = notification.alertBody
+//        {
+//            let alert = UIAlertController(title: "Nieuw bericht", message: body, preferredStyle: .Alert)
+//            alert.addAction(UIAlertAction(title: "OK", style: .Default, handler: nil))
+//            (UIApplication.sharedApplication().delegate as! AppDelegate).window?.rootViewController?.presentViewController(alert, animated: false, completion: nil)
+//            //self.window?.rootViewController?.presentViewController(alert, animated: false, completion: nil)
+//        }
+    }
+    
+    
+    func application(application: UIApplication, didReceiveRemoteNotification userInfo: [NSObject : AnyObject], fetchCompletionHandler completionHandler: (UIBackgroundFetchResult) -> Void) {
+        logthis(String(application.applicationState));
+        
+        // Save the completionhandler. This way we have enough time to start live tracking and then
+        // call the completionhandler when we're pretty sure everything is up and running
+        // or not gonna run at all (10 seconds?)
+        // We'll do this from the ARLiveTrackManager class!!!!!!!!!!!
+        properties.didReceiveRemoteNotificationFetchCompletionHandler = completionHandler
+        delegate?.handleRemoteNotificationWithUserInfo(userInfo, whenDone: { (result: UIBackgroundFetchResult) in
+            self.runDidReceiveRemoteNotificationFetchCompletionHandler(result)
+        })
+        if delegate == nil {
+            logthis("Did you forget to set the delegate of the NotificationManager (see example implementation on top of file)?")
+        }
+        // Example of delegate implementation:
+        // TODO
+        
+        /*
+         If it's not being called, it could be because of this (documentation):
+         As soon as you finish processing the notification, you must call the block in the handler parameter or your app will be terminated. Your app has up to 30 seconds of wall-clock time to process the notification and call the specified completion handler block. In practice, you should call the handler block as soon as you are done processing the notification. The system tracks the elapsed time, power usage, and data costs for your app’s background downloads. Apps that use significant amounts of power when processing push notifications may not always be woken up early to process future notifications.
+         Also see: http://stackoverflow.com/questions/26959472/silent-push-notifications-only-delivered-if-device-is-charging-and-or-app-is-for
+         */
+        
+
+    }
 }

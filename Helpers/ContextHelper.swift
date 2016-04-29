@@ -10,8 +10,8 @@ import Foundation
 import CoreData
 
 class ContextHelper {
-    let DatabaseAvailabilityNotificationName = "DatabaseAvailabilityNotificationName"
-    let DatabaseAvailabilityContext = "DatabaseAvailabilityContext"
+    static let DatabaseAvailabilityNotificationName = "DatabaseAvailabilityNotificationName"
+    static let DatabaseAvailabilityContext = "DatabaseAvailabilityContext"
     
     static let sharedInstance = ContextHelper()
     private(set) var context: NSManagedObjectContext! { didSet {
@@ -22,8 +22,8 @@ class ContextHelper {
             // (but that's okay because a segued-to View Controller would presumably be "prepared" by being given a context to work in)
             assert(NSThread.isMainThread())
             if context != nil {
-                let userInfo: [String: NSManagedObjectContext] = [DatabaseAvailabilityContext: context]
-                NSNotificationCenter.defaultCenter().postNotificationName(DatabaseAvailabilityNotificationName, object: self, userInfo: userInfo)
+                let userInfo: [String: NSManagedObjectContext] = [ContextHelper.DatabaseAvailabilityContext: context]
+                NSNotificationCenter.defaultCenter().postNotificationName(ContextHelper.DatabaseAvailabilityNotificationName, object: self, userInfo: userInfo)
             }
                 
         
