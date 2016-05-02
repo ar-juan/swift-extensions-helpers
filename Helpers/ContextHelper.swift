@@ -25,8 +25,34 @@ class ContextHelper {
                 let userInfo: [String: NSManagedObjectContext] = [ContextHelper.DatabaseAvailabilityContext: context]
                 NSNotificationCenter.defaultCenter().postNotificationName(ContextHelper.DatabaseAvailabilityNotificationName, object: self, userInfo: userInfo)
             }
-                
-        
+        }
+    }
+    
+    /**
+     Asynchronously performs a block on the context's queue (main queue)
+     - note: don't forget to call `performBlock(andWait)` on the `context`
+    */
+    func useContextWithOperation(operation: ((context: NSManagedObjectContext)->Void)) {
+        //let context = self.context
+        if self.context == nil && self.preparingDocument == true { // if we're currently getting / creating the database
+            let dispatchTime: dispatch_time_t = dispatch_time(DISPATCH_TIME_NOW, Int64(0.5 * Double(NSEC_PER_SEC)))
+            dispatch_after(dispatchTime, dispatch_get_main_queue(), {
+                // tehn try again in half a second
+                self.useContextWithOperation(operation)
+            })
+        } else { // not currently preparing the context
+            if self.context == nil { // but it doesnt exist yet
+                // this could happen
+                self.prepareDatabaseWhenDone({ (success: Bool, context: NSManagedObjectContext?) in
+                    if success && context != nil { operation(context: context!) }
+                    else { logthis("preparing database failed") }
+                })
+            } else {
+                operation(context: self.context)
+//                context.performBlockAndWait({ 
+//                    operation(context: self.context)
+//                })
+            }
         }
     }
     
@@ -39,6 +65,7 @@ class ContextHelper {
         }
         
         guard checkAndSetPreparingDocument() == false else { // do this only once
+            logthis("trying to prepare database more than once")
             return
         }
         
@@ -76,9 +103,8 @@ class ContextHelper {
                     self.context = managedObjectContext
                     whenDone?(success: true, context: self.context)
                 })
-                
+                self.preparingDocument = false
 
-                
             } catch {
                 // Report any error we got.
                 var dict = [String: AnyObject]()
@@ -92,6 +118,7 @@ class ContextHelper {
                     logthis("Unresolved error \(wrappedError), \(wrappedError.userInfo)")
                     whenDone?(success: false, context: nil)
                 })
+                self.preparingDocument = false
             }
         }
     }
@@ -103,11 +130,11 @@ class ContextHelper {
     }()
     
     
+    static let lockQueue: dispatch_queue_t = dispatch_queue_create("com.App.LockQueue", nil)
     private func checkAndSetPreparingDocument() -> Bool {
         // We need to make sure that only one process can access this property _preparingDocument at the same time:
-        let lockQueue = dispatch_queue_create("com.PwCReportingApp.LockQueue", nil)
         var result: Bool = false
-        dispatch_sync(lockQueue, { () -> Void in
+        dispatch_sync(ContextHelper.lockQueue, { () -> Void in
             if !self.preparingDocument {
                 self.preparingDocument = true
             } else {

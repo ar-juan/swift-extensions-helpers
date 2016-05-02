@@ -95,10 +95,9 @@ class CoreDataTableViewController: UITableViewController, NSFetchedResultsContro
     }
     
     func controller(controller: NSFetchedResultsController, didChangeSection sectionInfo: NSFetchedResultsSectionInfo, atIndex sectionIndex: Int, forChangeType type: NSFetchedResultsChangeType) {
-        print(type)
         switch type {
         case NSFetchedResultsChangeType(rawValue: 0)!:
-            logthis("iOS 8 bug - Do nothing if we get an invalid change type.")
+            //logthis("iOS 8 bug - Do nothing if we get an invalid change type.")
             break;
         case .Insert:
             self.tableView.insertSections(NSIndexSet(index: sectionIndex), withRowAnimation: .Fade)
@@ -110,10 +109,9 @@ class CoreDataTableViewController: UITableViewController, NSFetchedResultsContro
     }
     
     func controller(controller: NSFetchedResultsController, didChangeObject anObject: AnyObject, atIndexPath indexPath: NSIndexPath?, forChangeType type: NSFetchedResultsChangeType, newIndexPath: NSIndexPath?) {
-        print(type)
         switch type {
         case NSFetchedResultsChangeType(rawValue: 0)!:
-            logthis("iOS 8 bug - Do nothing if we get an invalid change type.")
+            //logthis("iOS 8 bug - Do nothing if we get an invalid change type.")
             break;
         case .Insert:
             tableView.insertRowsAtIndexPaths([newIndexPath!], withRowAnimation: .Fade)
