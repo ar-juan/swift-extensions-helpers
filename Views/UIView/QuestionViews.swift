@@ -17,6 +17,11 @@ protocol TwoOptionsQuestionViewDelegate {
     func choseOptionWithTitle(title: String?, ofTwoOptionsQuestionView view: TwoOptionsQuestionView)
     func colorForSelectedOptionWithTitle(title: String?, ofTwoOptionsQuestionView view: TwoOptionsQuestionView) -> UIColor?
     func colorForUnSelectedOptionWithTitle(title: String?, ofTwoOptionsQuestionView view: TwoOptionsQuestionView) -> UIColor?
+    
+    /**
+     This method is called when there is a detail disclosure button added (see `init` method), and a TouchUpInside event has been triggered. Use it to e.g. show a popup with information about the question.
+     */
+    func touchedDetailDisclosureButtonOfTwoOptionsQuestionView(twoOptionsQuestionView: TwoOptionsQuestionView)
 }
 
 /**
@@ -33,6 +38,8 @@ class TwoOptionsQuestionView: UIView {
     private let verticalDivider: UIView = UIView()
     private(set) var leftOption: UIButton = UIButton(type: .System)
     private(set) var rightOption: UIButton = UIButton(type: .System)
+    private let detailDisclosureButton: UIButton = UIButton(type: UIButtonType.DetailDisclosure)
+    private var showDetailDisclosureButton: Bool = false
     var delegate: TwoOptionsQuestionViewDelegate?
     
     var title: String? { get { return questionLabel.text } set { questionLabel.text = newValue } }
@@ -41,12 +48,10 @@ class TwoOptionsQuestionView: UIView {
     
     override init(frame: CGRect) {
         super.init(frame: frame)
-        setup()
     }
     
     required init?(coder aDecoder: NSCoder) {
         super.init(coder: aDecoder)
-        setup()
     }
     
     /**
@@ -54,6 +59,7 @@ class TwoOptionsQuestionView: UIView {
      */
     required convenience init(leftOptionTitle: String,
                               rightOptionTitle: String,
+                              showDetailDisclosureButton: Bool,
                               delegate: TwoOptionsQuestionViewDelegate) {
         self.init(frame: CGRect())
         self.delegate = delegate
@@ -65,8 +71,12 @@ class TwoOptionsQuestionView: UIView {
             logthis("equal left and right option titles will cause unexpected behaviour.")
         }
         
+        self.showDetailDisclosureButton = showDetailDisclosureButton
+        
         setOptionInfo(rightOption) // TODO: is double..
         setOptionInfo(leftOption) // TODO: is double..
+        
+        setup()
     }
     
     private func setup() {
@@ -86,6 +96,11 @@ class TwoOptionsQuestionView: UIView {
         
         setVerticalDividerInfo()
         addSubview(verticalDivider)
+        
+        if showDetailDisclosureButton {
+            setDetailDisclosureButtonInfo()
+            addSubview(detailDisclosureButton)
+        }
     }
     
     func selectOptionWithTitle(title: String?) {
@@ -148,6 +163,18 @@ class TwoOptionsQuestionView: UIView {
         verticalDivider.translatesAutoresizingMaskIntoConstraints = false
     }
     
+    private func setDetailDisclosureButtonInfo() {
+        if !detailDisclosureButton.allTargets().contains(self) {
+            detailDisclosureButton.addTarget(self, action: "touchedDetailDisclosureButton:", forControlEvents: .TouchUpInside)
+        }
+        detailDisclosureButton.translatesAutoresizingMaskIntoConstraints = false
+    }
+    
+    func touchedDetailDisclosureButton(sender: UIButton) {
+        delegate?.touchedDetailDisclosureButtonOfTwoOptionsQuestionView(self)
+    }
+    
+    
     var didSetConstraints = false
     override func updateConstraints() {
         if !didSetConstraints {
@@ -156,10 +183,28 @@ class TwoOptionsQuestionView: UIView {
             self.addConstraint(NSLayoutConstraint(item: questionLabel, attribute: .Leading, relatedBy: .Equal, toItem: self, attribute: .Leading, multiplier: 1, constant: 0))
             self.addConstraint(NSLayoutConstraint(item: questionLabel, attribute: .Trailing, relatedBy: .Equal, toItem: self, attribute: .Trailing, multiplier: 1, constant: 0))
             self.addConstraint(NSLayoutConstraint(item: questionLabel, attribute: .Top, relatedBy: .Equal, toItem: self, attribute: .Top, multiplier: 1, constant: 0))
-            self.addConstraint(NSLayoutConstraint(item: questionLabel, attribute: .Bottom, relatedBy: .Equal, toItem: horizontalDivider, attribute: .Top, multiplier: 1, constant: 0))
             
-            // divider constraints
-            self.addConstraint(NSLayoutConstraint(item: horizontalDivider, attribute: .Top, relatedBy: .Equal, toItem: questionLabel, attribute: .Bottom, multiplier: 1, constant: 0))
+            if showDetailDisclosureButton
+            {
+                self.addConstraint(NSLayoutConstraint(item: questionLabel, attribute: .Bottom, relatedBy: .Equal, toItem: detailDisclosureButton, attribute: .Top, multiplier: 1, constant: 0))
+                
+                // questionInfoButton constraints
+                self.addConstraint(NSLayoutConstraint(item: detailDisclosureButton, attribute: .Top, relatedBy: .Equal, toItem: questionLabel, attribute: .Bottom, multiplier: 1, constant: 0))
+                self.addConstraint(NSLayoutConstraint(item: detailDisclosureButton, attribute: .Width, relatedBy: .Equal, toItem: nil, attribute: .NotAnAttribute, multiplier: 0, constant: 48))
+                self.addConstraint(NSLayoutConstraint(item: detailDisclosureButton, attribute: .Height, relatedBy: .Equal, toItem: nil, attribute: .NotAnAttribute, multiplier: 0, constant: 48))
+                //self.addConstraint(NSLayoutConstraint(item: questionInfoButton, attribute: .Trailing, relatedBy: .Equal, toItem: self, attribute: .Trailing, multiplier: 1, constant: -16))
+                self.addConstraint(NSLayoutConstraint(item: detailDisclosureButton, attribute: .CenterX, relatedBy: .Equal, toItem: questionLabel, attribute: .CenterX, multiplier: 1, constant: 0))
+                
+                // divider constraints
+                self.addConstraint(NSLayoutConstraint(item: horizontalDivider, attribute: .Top, relatedBy: .Equal, toItem: detailDisclosureButton, attribute: .Bottom, multiplier: 1, constant: 0))
+            }
+            else
+            {
+                self.addConstraint(NSLayoutConstraint(item: questionLabel, attribute: .Bottom, relatedBy: .Equal, toItem: horizontalDivider, attribute: .Top, multiplier: 1, constant: 0))
+                self.addConstraint(NSLayoutConstraint(item: horizontalDivider, attribute: .Top, relatedBy: .Equal, toItem: questionLabel, attribute: .Bottom, multiplier: 1, constant: 0))
+                
+            }
+                
             self.addConstraint(NSLayoutConstraint(item: horizontalDivider, attribute: .Leading, relatedBy: .Equal, toItem: self, attribute: .Leading, multiplier: 1, constant: 0))
             self.addConstraint(NSLayoutConstraint(item: horizontalDivider, attribute: .Trailing, relatedBy: .Equal, toItem: self, attribute: .Trailing, multiplier: 1, constant: 0))
             self.addConstraint(NSLayoutConstraint(item: horizontalDivider, attribute: .Height, relatedBy: .Equal, toItem: nil, attribute: .NotAnAttribute, multiplier: 0, constant: 8))
@@ -230,6 +275,11 @@ protocol MultipleOptionsQuestionViewDelegate {
      - parameter colorForSelectedRow: row is zero based
      */
     func pickerViewOfMultipleOptionsQuestionView(multipleOptionsQuestionView: MultipleOptionsQuestionView, colorForSelectedRow row: Int?) -> UIColor?
+    
+    /**
+     This method is called when there is a detail disclosure button added (see `init` method), and a TouchUpInside event has been triggered. Use it to e.g. show a popup with information about the question.
+     */
+    func touchedDetailDisclosureButtonOfMultipleOptionsQuestionView(multipleOptionsQuestionView: MultipleOptionsQuestionView)
 }
 
 
@@ -252,6 +302,8 @@ class MultipleOptionsQuestionView: UIView, UIPickerViewDelegate, UIPickerViewDat
     private var inputFieldPlaceholderText: String! { didSet { inputField.placeholder = inputFieldPlaceholderText } }
     var delegate: MultipleOptionsQuestionViewDelegate?
     private var pickerView: UIPickerViewWithButtons = UIPickerViewWithButtons()
+    private let detailDisclosureButton: UIButton = UIButton(type: UIButtonType.DetailDisclosure)
+    private var showDetailDisclosureButton: Bool = false
     
     var title: String? { get { return questionLabel.text } set { questionLabel.text = newValue } }
     private var answerPrefix: String?
@@ -266,12 +318,10 @@ class MultipleOptionsQuestionView: UIView, UIPickerViewDelegate, UIPickerViewDat
     
     override init(frame: CGRect) {
         super.init(frame: frame)
-        setup()
     }
     
     required init?(coder aDecoder: NSCoder) {
         super.init(coder: aDecoder)
-        setup()
         logthis("designated initializer is: \"required convenience init(selectedRow: Int?, inputFieldPlaceholder: String, answerPrefix: String?)\". Modify class for UIStoyboard compatibility.")
     }
     
@@ -284,6 +334,11 @@ class MultipleOptionsQuestionView: UIView, UIPickerViewDelegate, UIPickerViewDat
         
         setInputFieldInfo()
         addSubview(inputField)
+        
+        if showDetailDisclosureButton {
+            setDetailDisclosureButtonInfo()
+            addSubview(detailDisclosureButton)
+        }
     }
     
     /**
@@ -291,11 +346,14 @@ class MultipleOptionsQuestionView: UIView, UIPickerViewDelegate, UIPickerViewDat
      */
     required convenience init(inputFieldPlaceholder: String,
                               answerPrefix: String?,
+                              showDetailDisclosureButton: Bool,
                               delegate: MultipleOptionsQuestionViewDelegate) {
         self.init(frame: CGRect())
         self.delegate = delegate
         self.answerPrefix = answerPrefix
         self.inputFieldPlaceholderText = inputFieldPlaceholder
+        self.showDetailDisclosureButton = showDetailDisclosureButton
+        setup()
     }
     
     /**
@@ -337,6 +395,17 @@ class MultipleOptionsQuestionView: UIView, UIPickerViewDelegate, UIPickerViewDat
         inputField.tintColor = UIColor.clearColor()
     }
     
+    private func setDetailDisclosureButtonInfo() {
+        if !detailDisclosureButton.allTargets().contains(self) {
+            detailDisclosureButton.addTarget(self, action: "touchedDetailDisclosureButton:", forControlEvents: .TouchUpInside)
+        }
+        detailDisclosureButton.translatesAutoresizingMaskIntoConstraints = false
+    }
+    
+    func touchedDetailDisclosureButton(sender: UIButton) {
+        delegate?.touchedDetailDisclosureButtonOfMultipleOptionsQuestionView(self)
+    }
+    
     private var didSetConstraints = false
     override func updateConstraints() {
         if !didSetConstraints {
@@ -345,10 +414,31 @@ class MultipleOptionsQuestionView: UIView, UIPickerViewDelegate, UIPickerViewDat
             self.addConstraint(NSLayoutConstraint(item: questionLabel, attribute: .Leading, relatedBy: .Equal, toItem: self, attribute: .Leading, multiplier: 1, constant: 0))
             self.addConstraint(NSLayoutConstraint(item: questionLabel, attribute: .Trailing, relatedBy: .Equal, toItem: self, attribute: .Trailing, multiplier: 1, constant: 0))
             self.addConstraint(NSLayoutConstraint(item: questionLabel, attribute: .Top, relatedBy: .Equal, toItem: self, attribute: .Top, multiplier: 1, constant: 0))
-            self.addConstraint(NSLayoutConstraint(item: questionLabel, attribute: .Bottom, relatedBy: .Equal, toItem: horizontalDivider, attribute: .Top, multiplier: 1, constant: 0))
+            //self.addConstraint(NSLayoutConstraint(item: questionLabel, attribute: .Bottom, relatedBy: .Equal, toItem: horizontalDivider, attribute: .Top, multiplier: 1, constant: 0))
+            
+            if showDetailDisclosureButton
+            {
+                self.addConstraint(NSLayoutConstraint(item: questionLabel, attribute: .Bottom, relatedBy: .Equal, toItem: detailDisclosureButton, attribute: .Top, multiplier: 1, constant: 0))
+                
+                // questionInfoButton constraints
+                self.addConstraint(NSLayoutConstraint(item: detailDisclosureButton, attribute: .Top, relatedBy: .Equal, toItem: questionLabel, attribute: .Bottom, multiplier: 1, constant: 0))
+                self.addConstraint(NSLayoutConstraint(item: detailDisclosureButton, attribute: .Width, relatedBy: .Equal, toItem: nil, attribute: .NotAnAttribute, multiplier: 0, constant: 48))
+                self.addConstraint(NSLayoutConstraint(item: detailDisclosureButton, attribute: .Height, relatedBy: .Equal, toItem: nil, attribute: .NotAnAttribute, multiplier: 0, constant: 48))
+                //self.addConstraint(NSLayoutConstraint(item: questionInfoButton, attribute: .Trailing, relatedBy: .Equal, toItem: self, attribute: .Trailing, multiplier: 1, constant: -16))
+                self.addConstraint(NSLayoutConstraint(item: detailDisclosureButton, attribute: .CenterX, relatedBy: .Equal, toItem: questionLabel, attribute: .CenterX, multiplier: 1, constant: 0))
+                
+                // divider constraints
+                self.addConstraint(NSLayoutConstraint(item: horizontalDivider, attribute: .Top, relatedBy: .Equal, toItem: detailDisclosureButton, attribute: .Bottom, multiplier: 1, constant: 0))
+            }
+            else
+            {
+                self.addConstraint(NSLayoutConstraint(item: questionLabel, attribute: .Bottom, relatedBy: .Equal, toItem: horizontalDivider, attribute: .Top, multiplier: 1, constant: 0))
+                self.addConstraint(NSLayoutConstraint(item: horizontalDivider, attribute: .Top, relatedBy: .Equal, toItem: questionLabel, attribute: .Bottom, multiplier: 1, constant: 0))
+                
+            }
             
             // horizontal divider constraints
-            self.addConstraint(NSLayoutConstraint(item: horizontalDivider, attribute: .Top, relatedBy: .Equal, toItem: questionLabel, attribute: .Bottom, multiplier: 1, constant: 0))
+            //self.addConstraint(NSLayoutConstraint(item: horizontalDivider, attribute: .Top, relatedBy: .Equal, toItem: questionLabel, attribute: .Bottom, multiplier: 1, constant: 0))
             self.addConstraint(NSLayoutConstraint(item: horizontalDivider, attribute: .Leading, relatedBy: .Equal, toItem: self, attribute: .Leading, multiplier: 1, constant: 0))
             self.addConstraint(NSLayoutConstraint(item: horizontalDivider, attribute: .Trailing, relatedBy: .Equal, toItem: self, attribute: .Trailing, multiplier: 1, constant: 0))
             self.addConstraint(NSLayoutConstraint(item: horizontalDivider, attribute: .Height, relatedBy: .Equal, toItem: nil, attribute: .NotAnAttribute, multiplier: 0, constant: 8))
