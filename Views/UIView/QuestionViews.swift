@@ -1,9 +1,7 @@
 //
 //  TwoOptionsQuestionView.swift
-//  Jeeves
 //
 //  Created by Arjan on 25/04/16.
-//  Copyright © 2016 Auxilium. All rights reserved.
 //
 
 import UIKit

@@ -1,9 +1,7 @@
 //
 //  UIFont.swift
-//  PwcReportingApp
 //
 //  Created by Arjan van der Laan on 02/02/16.
-//  Copyright © 2016 Auxilium. All rights reserved.
 //
 
 import UIKit

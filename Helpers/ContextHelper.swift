@@ -1,9 +1,7 @@
 //
 //  ContextHelper.swift
-//  App
 //
 //  Created by Arjan van der Laan on 05/02/16.
-//  Copyright © 2016 Auxilium. All rights reserved.
 //
 
 import Foundation

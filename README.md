@@ -20,3 +20,6 @@ cd ..
 git add MEDIA
 git commit -m "Upgraded media to version XYZ"
 This just recorded the fact that the MEDIA submodule WITHIN PROJECT2 is now at version XYZ.
+
+### LICENCE
+MIT License

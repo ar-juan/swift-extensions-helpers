@@ -1,9 +1,7 @@
 //
 //  File.swift
-//  PwcReportingApp
 //
 //  Created by Arjan on 07/03/16.
-//  Copyright © 2016 Auxilium. All rights reserved.
 //
 
 import UIKit

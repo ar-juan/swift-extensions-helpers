@@ -1,9 +1,7 @@
 //
 //  ConnectionManager.swift
-//  App
 //
 //  Created by Arjan on 03/03/16.
-//  Copyright © 2016 Auxilium. All rights reserved.
 //
 
 import UIKit
