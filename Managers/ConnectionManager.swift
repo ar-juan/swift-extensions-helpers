@@ -45,6 +45,12 @@ enum PostType {
 private class ConnectionManager {
     private static let sharedConnectionManager = ConnectionManager()
     private init() {} // prevents others from using the default '()' initializer for this class.
+    private let concurrentConnectionQueue: dispatch_queue_t = {
+        guard let appName = NSBundle.mainBundle().infoDictionary![kCFBundleNameKey as String] as? String else {
+            fatalError("no appname")
+        }
+        return dispatch_queue_create("nl.\(appName).concurrentConnectionQueue", DISPATCH_QUEUE_CONCURRENT)
+    }()
     
     private static func urlSessionForType(type: PostType) -> NSURLSession {
         switch type {
@@ -89,6 +95,10 @@ private class ConnectionManager {
     
     // MARK: GET and POST data methods
     private func postData(data: NSData, toURLString urlString: String, usingSession session: NSURLSession, withCompletionHandler completionHandler: ((data: NSData?, response: NSURLResponse?, error: NSError?, request: NSMutableURLRequest?) -> Void)) {
+        // Start the long-running task and return immediately.
+        // TODO: TEST
+        dispatch_barrier_async(concurrentConnectionQueue) {
+            logthis("now posting data to \(urlString)")
         var bgTask: UIBackgroundTaskIdentifier?
         
         let application = UIApplication.sharedApplication()
@@ -99,8 +109,7 @@ private class ConnectionManager {
             bgTask = UIBackgroundTaskInvalid
         })
         
-        // Start the long-running task and return immediately.
-        dispatch_async(dispatch_get_global_queue(QOS_CLASS_USER_INITIATED, 0)) { () -> Void in
+        
             let url = NSURL(string: urlString)!
             let request = NSMutableURLRequest(URL: url)
             
@@ -122,9 +131,34 @@ private class ConnectionManager {
             })
             task.resume()
         }
+        
+//        dispatch_async(dispatch_get_global_queue(QOS_CLASS_USER_INITIATED, 0)) { () -> Void in
+//            let url = NSURL(string: urlString)!
+//            let request = NSMutableURLRequest(URL: url)
+//            
+//            // iOS 8.3 has a bug where the http headers of the configuration are not used. Set them also on the request.
+//            if let headers = session.configuration.HTTPAdditionalHeaders {
+//                for (key, value) in headers {
+//                    request.addValue(value as! String, forHTTPHeaderField: key as! String)
+//                }
+//            }
+//            request.HTTPMethod = "POST"
+//            request.HTTPBody = data
+//            request.timeoutInterval = 120
+//            
+//            let task: NSURLSessionDataTask = session.dataTaskWithRequest(request, completionHandler: { (data: NSData?, response: NSURLResponse?, error: NSError?) -> Void in
+//                completionHandler(data: data, response: response, error: error, request: request)
+//                
+//                application.endBackgroundTask(bgTask!)
+//                bgTask = UIBackgroundTaskInvalid;
+//            })
+//            task.resume()
+//        }
     }
     
     private func getDatawithURLString(urlString: String, usingSession session: NSURLSession, withCompletionHandler completionHandler: ((responseData: NSData?, response: NSURLResponse?, error: NSError?) -> Void)) {
+        dispatch_barrier_async(concurrentConnectionQueue) {
+            logthis("now getting data")
         var bgTask: UIBackgroundTaskIdentifier?
         
         let application = UIApplication.sharedApplication()
@@ -136,7 +170,7 @@ private class ConnectionManager {
         })
         
         // Start the long-running task and return immediately.
-        dispatch_async(dispatch_get_global_queue(QOS_CLASS_USER_INITIATED, 0)) { () -> Void in
+        
             let url = NSURL(string: urlString)!
             let request = NSMutableURLRequest(URL: url)
             
@@ -151,6 +185,23 @@ private class ConnectionManager {
             })
             task.resume()
         }
+        
+//        // Start the long-running task and return immediately.
+//        dispatch_async(dispatch_get_global_queue(QOS_CLASS_USER_INITIATED, 0)) { () -> Void in
+//            let url = NSURL(string: urlString)!
+//            let request = NSMutableURLRequest(URL: url)
+//            
+//            request.HTTPMethod = "GET"
+//            request.timeoutInterval = 120
+//            
+//            let task: NSURLSessionDataTask = session.dataTaskWithRequest(request, completionHandler: { (data: NSData?, response: NSURLResponse?, error: NSError?) -> Void in
+//                completionHandler(responseData: data, response: response, error: error)
+//                
+//                application.endBackgroundTask(bgTask!)
+//                bgTask = UIBackgroundTaskInvalid;
+//            })
+//            task.resume()
+//        }
     }
 }
 
@@ -159,7 +210,7 @@ class AppConnectionManager {
     static let sharedInstance = AppConnectionManager()
     private let connectionManager = ConnectionManager.sharedConnectionManager
     private init() {}
-    private let maxAttempts = 2
+    private let maxAttempts = 3
     private let maxResponseBodySizeForLog = 200
     private let logMuch: Bool = false
     

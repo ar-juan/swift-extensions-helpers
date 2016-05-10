@@ -41,6 +41,45 @@ class LoginManager {
     var delegate: LoginManagerDelegate?
     let loginVCStoryboardIdentifier = "Login VC"
     
+    // MARK: Queues
+    /** 
+     This queue is used to stack the login code + completionhandlers that are part of the `login(JSONPostData:_,URLString:,_completionHandler:_)` method. When a second call to login arrives, we stack the request after the current one, to prevent race conditions by
+     - calling login()
+     - calling login() again from another point in the app
+     - getting a token
+     - saving the token
+     - starting a e.g. getProducts request with the token
+     - meanwhile second login() call comes back with a new token (old becomes invalid)
+     - the getProducts request returns: unauthorized, invalid token
+     - loop
+     */
+    private let concurrentLoginQueue: dispatch_queue_t = {
+        guard let appName = NSBundle.mainBundle().infoDictionary![kCFBundleNameKey as String] as? String else {
+            fatalError("no appname")
+        }
+        return dispatch_queue_create("nl.\(appName).LoginManager.concurrentLoginQueue", DISPATCH_QUEUE_CONCURRENT)
+    }()
+    
+//    /**
+//     This queue is used to make sure the calls to `currentlyLoggingIn` are synchronous
+//     */
+//    private let concurrentGetterSetterQueue: dispatch_queue_t = {
+//        guard let appName = NSBundle.mainBundle().infoDictionary![kCFBundleNameKey as String] as? String else {
+//            fatalError("no appname")
+//        }
+//        return dispatch_queue_create("nl.\(appName).LoginManager.concurrentGetterSetterQueue", DISPATCH_QUEUE_CONCURRENT)
+//    }()
+//    
+//    
+//    // Make sure everything is thread safe, even when `currentlyLoggingIn` is not private anymore
+//    private var currentlyLoggingIn: Bool = false
+//    func setCurrentlyLoggingIn(currentlyLoggingIn: Bool) {
+//        dispatch_barrier_async(concurrentGetterSetterQueue, <#T##block: dispatch_block_t##dispatch_block_t##() -> Void#>)
+//    }
+//    func getCurrentlyLoggingIn(currentlyLoggingIn: Bool) {
+//        
+//    }
+    
     /**
      Checks if
      - `JSONPostData` is valid JSON,
@@ -59,50 +98,51 @@ class LoginManager {
      In case of a valid JSON response, `completionHandler(success:true, responseDict:json)` is called.
      */
     func login(JSONPostData JSONPostData: Dictionary<String, AnyObject>, URLString: String, completionHandler: ((success: Bool, responseDict: [String:AnyObject]?) -> Void)?) {
-        
-        if !NSJSONSerialization.isValidJSONObject(JSONPostData) {
-            logthis("no valid JSON")
-            completionHandler?(success: false, responseDict: nil)
-        }
-        
-        do {
-            let jsonData = try NSJSONSerialization.dataWithJSONObject(JSONPostData, options: [])
-            AppConnectionManager.sharedInstance.postAppData(jsonData,
-                toURLString: URLString,
-                postType: PostType.JSON,
-                onSuccess: { (responseData: NSData?) in
-                    guard let data = responseData else {
+        dispatch_barrier_async(concurrentLoginQueue) {
+            if !NSJSONSerialization.isValidJSONObject(JSONPostData) {
+                logthis("no valid JSON")
+                completionHandler?(success: false, responseDict: nil)
+            }
+            
+            do {
+                let jsonData = try NSJSONSerialization.dataWithJSONObject(JSONPostData, options: [])
+                AppConnectionManager.sharedInstance.postAppData(jsonData,
+                                                                toURLString: URLString,
+                                                                postType: PostType.JSON,
+                                                                onSuccess: { (responseData: NSData?) in
+                                                                    guard let data = responseData else {
+                                                                        completionHandler?(success: false, responseDict: nil)
+                                                                        return
+                                                                    }
+                                                                    
+                                                                    do
+                                                                        
+                                                                    {
+                                                                        guard let json =
+                                                                            try NSJSONSerialization.JSONObjectWithData(data, options: []) as? [String:AnyObject] else {
+                                                                                
+                                                                                completionHandler?(success: false, responseDict: nil)
+                                                                                return
+                                                                        }
+                                                                        
+                                                                        //logthis("json: \(json)")
+                                                                        completionHandler?(success: true, responseDict: json)
+                                                                    }
+                                                                        
+                                                                    catch let error as NSError
+                                                                        
+                                                                    {
+                                                                        logthis(error.localizedDescription)
+                                                                        completionHandler?(success: false, responseDict: nil)
+                                                                    }
+                                                                    
+                    }, onError: { (statusCode: Int) in
                         completionHandler?(success: false, responseDict: nil)
-                        return
-                    }
-                    
-                    do
-                    
-                    {
-                        guard let json =
-                            try NSJSONSerialization.JSONObjectWithData(data, options: []) as? [String:AnyObject] else {
-                            
-                                completionHandler?(success: false, responseDict: nil)
-                                return
-                        }
                         
-                        //logthis("json: \(json)")
-                        completionHandler?(success: true, responseDict: json)
-                    }
-                        
-                    catch let error as NSError
-                    
-                    {
-                        logthis(error.localizedDescription)
-                        completionHandler?(success: false, responseDict: nil)
-                    }
-                    
-                }, onError: { (statusCode: Int) in
-                    completionHandler?(success: false, responseDict: nil)
-                    
-                }, attemptNumber: 1)
-        } catch {
-            logthis("error creating JSON")
+                    }, attemptNumber: 1)
+            } catch {
+                logthis("error creating JSON")
+            }
         }
     }
     
