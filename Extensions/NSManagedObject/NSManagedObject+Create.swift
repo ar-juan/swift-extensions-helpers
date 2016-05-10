@@ -40,6 +40,32 @@ extension NSManagedObject {
         return object
     }
     
+    // stackoverflow.com/questions/25271208/cast-to-typeofself
+    class func existingObjectWithId<T where T: NSManagedObject>(id: Int, inContext context: NSManagedObjectContext, createNewIfNil: Bool) -> T? {
+        var object: T?
+        if id > 0 {
+            let request = NSFetchRequest(entityName: String(self))
+            request.predicate = NSPredicate(format: "id == %d", id)
+            
+            do
+            {
+                let results = try context.executeFetchRequest(request)
+                if results.count > 1 { logthis("More than one \(String(self)) with same id. Should never happen") }
+                else if let result = results.first as? NSManagedObject { object = result as? T }
+                else if createNewIfNil == true {
+                    object = (NSEntityDescription.insertNewObjectForEntityForName(String(self), inManagedObjectContext: context) as! T)
+                    object?.setValue(id, forKeyPath: "id")
+                }
+            }
+            catch let error as NSError
+            {
+                logthis("\(error.localizedDescription) (\(error.localizedFailureReason))")
+            }
+        }
+        return object
+    }
+    
+    
     class func nextNSNumberIntForField(field: String, context: NSManagedObjectContext) -> NSNumber? {
         var nextNumber: NSNumber? = nil
         
