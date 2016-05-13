@@ -67,9 +67,10 @@ class ContextHelper {
             return
         }
         
+        let modelName = "Model"
         // The managed object model for the application. This property is not optional. It is a fatal error for the application not to be able to find and load its model.
-        guard let modelURL = NSBundle.mainBundle().URLForResource(appName, withExtension: "momd") else {
-            fatalError("error loading NSBundle.mainBundle().URLForResource(\"\(appName)\", withExtension: \"momd\")")
+        guard let modelURL = NSBundle.mainBundle().URLForResource(modelName, withExtension: "momd") else {
+            fatalError("error loading NSBundle.mainBundle().URLForResource(\"\(modelName)\", withExtension: \"momd\"). Call your main model \"Model.xcdatamodeld\"")
         }
         
         guard let managedObjectModel = NSManagedObjectModel(contentsOfURL: modelURL) else {
