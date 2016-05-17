@@ -20,6 +20,7 @@ struct LocationHelper {
         directions.calculateETAWithCompletionHandler({ (response: MKETAResponse?, error: NSError?) in
             if error != nil {
                 logthis("directions error: \(error?.localizedDescription) (\(error?.localizedFailureReason))")
+                completion(resultString: "Onbekend")
             } else {
                 
                 if let expectedTravelTime = response?.expectedTravelTime {
@@ -40,6 +41,5 @@ struct LocationHelper {
             }
             
         })
-        
     }
 }
