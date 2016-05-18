@@ -98,7 +98,7 @@ private class ConnectionManager {
         // Start the long-running task and return immediately.
         // TODO: TEST
         dispatch_barrier_async(concurrentConnectionQueue) {
-            logthis("now posting data to \(urlString)")
+            //logthis("now posting data to \(urlString)")
         var bgTask: UIBackgroundTaskIdentifier?
         
         let application = UIApplication.sharedApplication()
@@ -158,7 +158,7 @@ private class ConnectionManager {
     
     private func getDatawithURLString(urlString: String, usingSession session: NSURLSession, withCompletionHandler completionHandler: ((responseData: NSData?, response: NSURLResponse?, error: NSError?) -> Void)) {
         dispatch_barrier_async(concurrentConnectionQueue) {
-            logthis("now getting data")
+            //logthis("now getting data")
         var bgTask: UIBackgroundTaskIdentifier?
         
         let application = UIApplication.sharedApplication()
@@ -277,7 +277,7 @@ class AppConnectionManager {
             let statusCode = httpResponse.statusCode
             if statusCode/100 == 2 {
                 successHandler?(responseData: responseData, httpResponse: httpResponse)
-                self.logResult("get successful", forUrlString: urlString, session: session, responseData: responseData, httpResponse: httpResponse, request: nil, error:  error)
+                //self.logResult("get successful", forUrlString: urlString, session: session, responseData: responseData, httpResponse: httpResponse, request: nil, error:  error)
             } else {
                 var failureText: String = "-"
                 self.logResult("get error", forUrlString: urlString, session: session, responseData: responseData, httpResponse: httpResponse, request: nil, error: error)
@@ -333,7 +333,7 @@ class AppConnectionManager {
             
             if statusCode / 100 == 2 {
                 successHandler?(responseData: responseData)
-                self.logResult("post successful", forUrlString: urlString, session: session, responseData: responseData, httpResponse: httpResponse, request: request, error: error)
+                //self.logResult("post successful", forUrlString: urlString, session: session, responseData: responseData, httpResponse: httpResponse, request: request, error: error)
             } else {
                 var failureText: String = "-"
                 
