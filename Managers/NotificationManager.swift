@@ -79,7 +79,7 @@ class NotificationManager {
         static var didReceiveRemoteNotificationFetchCompletionHandler: ((UIBackgroundFetchResult) -> Void)? {
             didSet {
                 // in case FetchCompletionHandler is not called by the app, call it anyways
-                didReceiveRemoteNotificationFetchCompletionHandlerTimer = NSTimer(timeInterval: 10, target: UIApplication.sharedApplication().delegate! /* == self */, selector: #selector(NotificationManager.runDidReceiveRemoteNotificationFetchCompletionHandlerIfFailed(_:)), userInfo: nil, repeats: false)
+                didReceiveRemoteNotificationFetchCompletionHandlerTimer = NSTimer.scheduledTimerWithTimeInterval(10, target: NotificationManager.sharedInstance, selector: #selector(NotificationManager.runDidReceiveRemoteNotificationFetchCompletionHandlerIfFailed(_:)), userInfo: nil, repeats: false)
             }
         }
     }
