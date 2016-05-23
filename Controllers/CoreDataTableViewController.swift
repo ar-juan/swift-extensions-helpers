@@ -119,7 +119,12 @@ class CoreDataTableViewController: UITableViewController, NSFetchedResultsContro
             tableView.reloadRowsAtIndexPaths([indexPath!], withRowAnimation: .Fade)
             //self.configureCell(tableView.cellForRowAtIndexPath(indexPath!)!, withObject: anObject as! NSManagedObject)
         case .Move:
-            tableView.moveRowAtIndexPath(indexPath!, toIndexPath: newIndexPath!)
+            // Fixes a bug where indexPath == newIndexPath: 
+            // Which gives error: Attempt to create two animations for cell with userInfo (null)
+            // similar to stackoverflow.com/questions/31383760/ which has more solutions
+            if indexPath != newIndexPath {
+                tableView.moveRowAtIndexPath(indexPath!, toIndexPath: newIndexPath!)
+            }
         }
     }
     

@@ -27,8 +27,8 @@ extension UITableViewController {
      */
     func endRefreshing(control: UIRefreshControl?) {
         if control != nil {
-            self.tableView.setContentOffset(CGPointZero, animated: true)
             control!.endRefreshing()
+            self.tableView.setContentOffset(CGPointZero, animated: true)
         }
     }
 }
