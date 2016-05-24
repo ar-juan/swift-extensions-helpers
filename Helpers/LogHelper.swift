@@ -7,11 +7,20 @@
 import Foundation
 
 /*global*/ func logthis(msg:String = "", function: String = #function, file: String = #file, line: Int = #line){
-    print("\(LogHelper.makeTag(function, file: file, line: line)) \(msg)")
+    print("\(LogHelper.sharedInstance.makeTag(function, file: file, line: line)) \(msg)")
+}
+
+protocol LogHelperDelegate {
+    func LogHelperLogsString(string: String)
 }
 
 struct LogHelper {
-    private static func makeTag(function: String, file: String, line: Int) -> String{
+    static var sharedInstance: LogHelper = LogHelper()
+    private init() {}
+    
+    var delegate: LogHelperDelegate?
+    
+    private func makeTag(function: String, file: String, line: Int) -> String{
         var lineStr = "[\(line)]"
         let url = NSURL(fileURLWithPath: file)
         let fileName:String! = url.lastPathComponent == nil ? file : url.lastPathComponent!
@@ -40,6 +49,8 @@ struct LogHelper {
             lineStr.append(" " as Character)
             difference -= 1
         }
+        
+        delegate?.LogHelperLogsString("\(lineStr) \(shortClassName) \(function)")
         
         return "\(lineStr) \(shortClassName) \(function)"
     }

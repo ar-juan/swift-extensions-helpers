@@ -121,7 +121,7 @@ private class ConnectionManager {
             }
             request.HTTPMethod = "POST"
             request.HTTPBody = data
-            request.timeoutInterval = 120
+            request.timeoutInterval = 60
             
             let task: NSURLSessionDataTask = session.dataTaskWithRequest(request, completionHandler: { (data: NSData?, response: NSURLResponse?, error: NSError?) -> Void in
                 completionHandler(data: data, response: response, error: error, request: request)
@@ -175,7 +175,7 @@ private class ConnectionManager {
             let request = NSMutableURLRequest(URL: url)
             
             request.HTTPMethod = "GET"
-            request.timeoutInterval = 120
+            request.timeoutInterval = 60
             
             let task: NSURLSessionDataTask = session.dataTaskWithRequest(request, completionHandler: { (data: NSData?, response: NSURLResponse?, error: NSError?) -> Void in
                 completionHandler(responseData: data, response: response, error: error)
