@@ -1,62 +1,103 @@
 //
 //  NotificationManager.swift
-//  Jeeves
+//  App
 //
 //  Created by Arjan on 28/04/16.
 //
 
 import UIKit
 
-//TODO: Nadenken of ik niet beter alles gewoon weer in de extension van de appdelegate kan plaatsen, en shouldRegisterForRemoteNotifications shouldRegisterForUserNotifications in de hoof AppDelegate zet
-
-//// Example implementation
+///////////////////////////// Example implementation
+/*
 /**
  This app specific notification manager should be used as the central point for
  - registering the app for receiving notifications, both UI based and remote push notifications
  - showing a notification to the user
- In the appDelegate, you should call `JeevesNotificationManager.sharedInstance.prepareForApplication()`
+ In the appDelegate, you should call `AppNotificationManager.sharedInstance.prepareForApplication()`
  */
-//class JeevesN otificationManager: NotificationManagerDelegate { // Jeeves
-//    let sharedInstance = JeevesNotificationManager()
-//    let manager = NotificationManager.sharedInstance
-//    
-//    private init() {
-//        manager.delegate = self
-//    }
-//    
-//    func prepareForApplication(application:UIApplication, shouldRegisterForRemoteNotifications: Bool, shouldRegisterForUserNotifications: Bool) {
-//        if shouldRegisterForRemoteNotifications {
-//            manager.shouldRegisterForUserNotifications = true
-//        }
-//        
-//        manager.prepareForNotificationsOfApplication(application, shouldRegisterForRemoteNotifications: shouldRegisterForRemoteNotifications, shouldRegisterForUserNotifications: shouldRegisterForUserNotifications)
-//    }
-//    func prepared(token token: String) { // may be called multiple times
-//        if manager.shouldRegisterForRemoteNotifications &&
-//            NotificationManager.properties.registeredForUserNotifications &&
-//            NotificationManager.properties.registeredForRemoteSilentTypeNotifications {
-//            UserDefaults.NotificationDeviceToken = token
-//        }
-//        if manager.shouldRegisterForUserNotifications &&
-//            NotificationManager.properties.registeredForUserNotifications {
-//            UserDefaults.NotificationDeviceToken = token
-//        }
-//    }
-//}
+class AppNotificationManager: NotificationManagerDelegate {
+    static let sharedInstance = AppNotificationManager()
+    let manager = NotificationManager.sharedInstance
+    
+    private init() {
+        manager.delegate = self
+        
+        // If we are called BEFORE context has been set
+        NSNotificationCenter.defaultCenter().addObserverForName(Globals.DatabaseAvailabilityNotificationName, object: nil, queue: nil) { (let notification: NSNotification) in
+            if let userInfo = notification.userInfo as? [String: NSManagedObjectContext]
+                where userInfo[Globals.DatabaseAvailabilityContext] != nil {
+                self.context = userInfo[Globals.DatabaseAvailabilityContext]
+            } else {
+                logthis("userInfo or context received by notification is nil. Should never happen.")
+            }
+        }
+    }
+    
+    // MARK: Preparation
+    func prepareForApplication(application:UIApplication, shouldRegisterForRemoteNotifications: Bool, shouldRegisterForUserNotifications: Bool) {
+        if shouldRegisterForRemoteNotifications {
+            manager.shouldRegisterForUserNotifications = true
+        }
+        manager.prepareForNotificationsOfApplication(application, shouldRegisterForRemoteNotifications: shouldRegisterForRemoteNotifications, shouldRegisterForUserNotifications: shouldRegisterForUserNotifications)
+    }
+    
+    func prepared(token token: String) { // may be called multiple times
+        if manager.shouldRegisterForRemoteNotifications &&
+            manager.shouldRegisterForUserNotifications &&
+            NotificationManager.properties.registeredForUserNotifications &&
+            NotificationManager.properties.registeredForRemoteSilentTypeNotifications {
+            UserDefaults.NotificationDeviceToken = token
+        } else if manager.shouldRegisterForUserNotifications &&
+            NotificationManager.properties.registeredForUserNotifications {
+            UserDefaults.NotificationDeviceToken = token
+        }
+    }
+    func handleRemoteNotificationWithUserInfo(userInfo: [NSObject: AnyObject], whenDone completion: ((UIBackgroundFetchResult)->Void)) {
+        let result: UIBackgroundFetchResult = .NoData
+        completion(result)
+    }
+    func handleLocalNotification(notification: UILocalNotification) {
+        if let _ = notification.userInfo, let body = notification.alertBody
+        {
+            let alert = UIAlertController(title: notification.alertTitle ?? "new message", message: body, preferredStyle: .Alert)
+            alert.addAction(UIAlertAction(title: "OK", style: .Default, handler: {
+                (action: UIAlertAction) in
+                    // Do something
+            }))
+            (UIApplication.sharedApplication().delegate as! AppDelegate).window?.rootViewController?.presentViewController(alert, animated: false, completion: nil)
+        }
+    }
+}
+*/
 
 protocol NotificationManagerDelegate {
+    /**
+     This function is called when there is a tokenstring available. iOS 7 & 8 register for notifications in a different way, which may cause this method to be called twice. Second, if for one reason the app gets a new token, this will be called again. Hence therre needs to be a delegate troughout the lifetime of the `NotificationManager`.
+     
+     - parameter token: The notification token / identification of this specific app on this specific device
+     */
     func prepared(token token: String)
+    
+    /**
+     This method is called when a remote (push) notification has been received by the device. The delegate needs to handle this remote notification.
+     - parameter userInfo: a dictionary containing the notification data.
+     - parameter whenDone: a closure that needs to be called within a finite amount of time (see `completionHandlerTimeout`) after receiving the remote notification. Failing to call this within the set amount of time may cause a delayed aflevering of future remote notifications. Therefore if the timer which we set, reaches that time limit, `NotificationManager` force-calls a completionhandler with result `UIBackgroundFetchResult.Failed` itself and the `whenDone` of this method will never be called.
+     */
     func handleRemoteNotificationWithUserInfo(userInfo: [NSObject: AnyObject], whenDone completion: ((UIBackgroundFetchResult)->Void))
+    
+    /**
+     This method is called when a local (user) notification has been received by the device. The delegate needs to handle this local notification.
+     `notification.userInfo` contains the data related to this `notification`
+     */
     func handleLocalNotification(notification: UILocalNotification)
 }
 class NotificationManager {
     static let sharedInstance = NotificationManager() // Singleton pattern
     private init() {} // prevents others from using the default '()' initializer for this class.
     var delegate: NotificationManagerDelegate?
-    
-    // TODO: not implemented
+    static let completionHandlerTimeout: NSTimeInterval = 10 // seconds
+
     var shouldRegisterForRemoteNotifications = true
-    // TODO: not implemented
     var shouldRegisterForUserNotifications = true
     
     struct properties { // Expects singleton pattern!!
@@ -64,6 +105,7 @@ class NotificationManager {
         static var registeredForUserNotifications: Bool = false
         static var registeredForRemoteSilentTypeNotifications: Bool = false
         static var iOS8AndHigherNotificationSettings: UIUserNotificationType = UIUserNotificationType.Alert.union(UIUserNotificationType.Badge).union(UIUserNotificationType.Sound)
+        
         static var iOS7AndLowerNotificationSettings: UIRemoteNotificationType = UIRemoteNotificationType.Alert.union(UIRemoteNotificationType.Badge.union(UIRemoteNotificationType.Sound))
         
         /**
@@ -79,7 +121,7 @@ class NotificationManager {
         static var didReceiveRemoteNotificationFetchCompletionHandler: ((UIBackgroundFetchResult) -> Void)? {
             didSet {
                 // in case FetchCompletionHandler is not called by the app, call it anyways
-                didReceiveRemoteNotificationFetchCompletionHandlerTimer = NSTimer.scheduledTimerWithTimeInterval(10, target: NotificationManager.sharedInstance, selector: #selector(NotificationManager.runDidReceiveRemoteNotificationFetchCompletionHandlerIfFailed(_:)), userInfo: nil, repeats: false)
+                didReceiveRemoteNotificationFetchCompletionHandlerTimer = NSTimer.scheduledTimerWithTimeInterval(completionHandlerTimeout, target: NotificationManager.sharedInstance, selector: #selector(NotificationManager.runDidReceiveRemoteNotificationFetchCompletionHandlerIfFailed(_:)), userInfo: nil, repeats: false)
             }
         }
     }

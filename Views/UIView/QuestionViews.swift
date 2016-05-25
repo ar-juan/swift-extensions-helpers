@@ -71,8 +71,8 @@ class TwoOptionsQuestionView: UIView {
         
         self.showDetailDisclosureButton = showDetailDisclosureButton
         
-        setOptionInfo(rightOption) // TODO: is double..
-        setOptionInfo(leftOption) // TODO: is double..
+        setOptionInfo(rightOption)
+        setOptionInfo(leftOption)
         
         setup()
     }
@@ -141,7 +141,7 @@ class TwoOptionsQuestionView: UIView {
         option.tintColor = UIColor.clearColor()
         
         if !option.allTargets().contains(self) {
-            option.addTarget(self, action: "optionChosen:", forControlEvents: .TouchUpInside)
+            option.addTarget(self, action: #selector(TwoOptionsQuestionView.optionChosen(_:)), forControlEvents: .TouchUpInside)
         }
     }
     
@@ -163,7 +163,7 @@ class TwoOptionsQuestionView: UIView {
     
     private func setDetailDisclosureButtonInfo() {
         if !detailDisclosureButton.allTargets().contains(self) {
-            detailDisclosureButton.addTarget(self, action: "touchedDetailDisclosureButton:", forControlEvents: .TouchUpInside)
+            detailDisclosureButton.addTarget(self, action: #selector(TwoOptionsQuestionView.touchedDetailDisclosureButton(_:)), forControlEvents: .TouchUpInside)
         }
         detailDisclosureButton.translatesAutoresizingMaskIntoConstraints = false
     }
@@ -395,7 +395,7 @@ class MultipleOptionsQuestionView: UIView, UIPickerViewDelegate, UIPickerViewDat
     
     private func setDetailDisclosureButtonInfo() {
         if !detailDisclosureButton.allTargets().contains(self) {
-            detailDisclosureButton.addTarget(self, action: "touchedDetailDisclosureButton:", forControlEvents: .TouchUpInside)
+            detailDisclosureButton.addTarget(self, action: #selector(TwoOptionsQuestionView.touchedDetailDisclosureButton(_:)), forControlEvents: .TouchUpInside)
         }
         detailDisclosureButton.translatesAutoresizingMaskIntoConstraints = false
     }

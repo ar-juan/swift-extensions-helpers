@@ -96,7 +96,6 @@ private class ConnectionManager {
     // MARK: GET and POST data methods
     private func postData(data: NSData, toURLString urlString: String, usingSession session: NSURLSession, withCompletionHandler completionHandler: ((data: NSData?, response: NSURLResponse?, error: NSError?, request: NSMutableURLRequest?) -> Void)) {
         // Start the long-running task and return immediately.
-        // TODO: TEST
         dispatch_barrier_async(concurrentConnectionQueue) {
             //logthis("now posting data to \(urlString)")
         var bgTask: UIBackgroundTaskIdentifier?
