@@ -413,7 +413,7 @@ class AppConnectionManager {
                                                                 }
                                                                     
                                                                 catch let error as NSError
-                                                                    
+                                                                
                                                                 {
                                                                     logthis(error.localizedDescription)
                                                                     completionHandler?(success: false, responseDict: nil, statusCode: nil)

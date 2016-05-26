@@ -7,7 +7,10 @@
 import Foundation
 
 /*global*/ func logthis(msg:String = "", function: String = #function, file: String = #file, line: Int = #line){
-    print("\(LogHelper.sharedInstance.makeTag(function, file: file, line: line)) \(msg)")
+    let str = "\(LogHelper.sharedInstance.makeTag(function, file: file, line: line)) \(msg)"
+    
+    print(str)
+    LogHelper.sharedInstance.delegate?.LogHelperLogsString(str)
 }
 
 protocol LogHelperDelegate {
@@ -49,8 +52,6 @@ struct LogHelper {
             lineStr.append(" " as Character)
             difference -= 1
         }
-        
-        delegate?.LogHelperLogsString("\(lineStr) \(shortClassName) \(function)")
         
         return "\(lineStr) \(shortClassName) \(function)"
     }

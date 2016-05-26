@@ -8,6 +8,7 @@ import UIKit
 
 extension UIAlertController {
     
+    // TODO: Moet weg, vind ik.
     func show() {
         present(animated: false, completion: nil)
     }
@@ -35,5 +36,13 @@ extension UIAlertController {
                 //    }
                 }
             }
+    }
+    
+    
+    // Korte route
+    class func alertWithTitle(title: String?, message: String, buttonTitle: String, buttonCompletion: ((UIAlertAction) -> Void)?) -> UIAlertController {
+        let ac = UIAlertController(title: title, message: message, preferredStyle: .Alert)
+        ac.addAction(UIAlertAction(title: buttonTitle, style: .Default, handler: buttonCompletion))
+        return ac
     }
 }
