@@ -97,11 +97,11 @@ class LoginManager {
      
      In case of a valid JSON response, `completionHandler(success:true, responseDict:json)` is called.
      */
-    func login(JSONPostData JSONPostData: Dictionary<String, AnyObject>, URLString: String, completionHandler: ((success: Bool, responseDict: [String:AnyObject]?) -> Void)?) {
+    func login(JSONPostData JSONPostData: Dictionary<String, AnyObject>, URLString: String, completionHandler: ((success: Bool, responseDict: [String:AnyObject]?, statusCode: Int) -> Void)?) {
         dispatch_barrier_async(concurrentLoginQueue) {
             if !NSJSONSerialization.isValidJSONObject(JSONPostData) {
                 logthis("no valid JSON")
-                completionHandler?(success: false, responseDict: nil)
+                completionHandler?(success: false, responseDict: nil, statusCode: 0)
             }
             
             do {
@@ -111,7 +111,7 @@ class LoginManager {
                                                                 postType: PostType.JSON,
                                                                 onSuccess: { (responseData: NSData?) in
                                                                     guard let data = responseData else {
-                                                                        completionHandler?(success: false, responseDict: nil)
+                                                                        completionHandler?(success: false, responseDict: nil, statusCode: 0)
                                                                         return
                                                                     }
                                                                     
@@ -121,23 +121,23 @@ class LoginManager {
                                                                         guard let json =
                                                                             try NSJSONSerialization.JSONObjectWithData(data, options: []) as? [String:AnyObject] else {
                                                                                 
-                                                                                completionHandler?(success: false, responseDict: nil)
+                                                                                completionHandler?(success: false, responseDict: nil, statusCode: 0)
                                                                                 return
                                                                         }
                                                                         
-                                                                        //logthis("json: \(json)")
-                                                                        completionHandler?(success: true, responseDict: json)
+                                                                        logthis("json: \(json)")
+                                                                        completionHandler?(success: true, responseDict: json, statusCode: 0)
                                                                     }
                                                                         
                                                                     catch let error as NSError
                                                                         
                                                                     {
                                                                         logthis(error.localizedDescription)
-                                                                        completionHandler?(success: false, responseDict: nil)
+                                                                        completionHandler?(success: false, responseDict: nil, statusCode: 0)
                                                                     }
                                                                     
                     }, onError: { (statusCode: Int) in
-                        completionHandler?(success: false, responseDict: nil)
+                        completionHandler?(success: false, responseDict: nil, statusCode: statusCode)
                         
                     }, attemptNumber: 1)
             } catch {
@@ -157,6 +157,7 @@ class LoginManager {
          we ask him if he's currently on screen.
         */
         if delegate == nil || (delegate != nil && !delegate!.currentlyShowingLoginScreen()) {
+
             let lvc = presentingVC?.storyboard!.instantiateViewControllerWithIdentifier(loginVCStoryboardIdentifier)
             if lvc != nil { presentingVC!.presentViewController(lvc!, animated: true, completion: nil) }
         }
