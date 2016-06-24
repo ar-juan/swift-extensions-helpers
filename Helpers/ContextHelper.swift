@@ -98,6 +98,10 @@ class ContextHelper {
                 let options = [NSMigratePersistentStoresAutomaticallyOption: true, NSInferMappingModelAutomaticallyOption: true]
                 try coordinator.addPersistentStoreWithType(NSSQLiteStoreType, configuration: nil, URL: url, options: options)
                 
+                if #available(iOS 9.0, *) {
+                    managedObjectContext.shouldDeleteInaccessibleFaults = true
+                }
+                
                 dispatch_async(dispatch_get_main_queue(), { () -> Void in
                     self.context = managedObjectContext
                     whenDone?(success: true, context: self.context)
