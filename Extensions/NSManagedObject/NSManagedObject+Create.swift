@@ -10,9 +10,15 @@ import CoreData
 extension NSManagedObject {
     
     // stackoverflow.com/questions/27109268/how-can-i-create-instances-of-managed-object-subclasses-in-a-nsmanagedobject-swi
-    convenience init(context: NSManagedObjectContext) {
-        let entity = NSEntityDescription.entityForName(String(self.dynamicType), inManagedObjectContext: context)!
-        self.init(entity: entity, insertIntoManagedObjectContext: context)
+//    convenience init(context: NSManagedObjectContext) {
+//        let entity = NSEntityDescription.entityForName(String(self.dynamicType), inManagedObjectContext: context)!
+//        self.init(entity: entity, insertIntoManagedObjectContext: context)
+//    }
+    
+    // http://stackoverflow.com/questions/39660427/support-multiple-ios-sdk-versions-with-swift
+    convenience init(sContext sContext: NSManagedObjectContext) {
+        let entity = NSEntityDescription.entityForName(String(self.dynamicType), inManagedObjectContext: sContext)!
+        self.init(entity: entity, insertIntoManagedObjectContext: sContext)
     }
     
     // stackoverflow.com/questions/25271208/cast-to-typeofself

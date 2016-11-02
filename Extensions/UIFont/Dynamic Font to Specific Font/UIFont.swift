@@ -74,8 +74,8 @@ extension UIFont {
             let dynamicFontIsItalic = (dynamicFontDescriptor.symbolicTraits.rawValue & UIFontDescriptorSymbolicTraits.TraitItalic.rawValue) > 0
             
             var toFontDescriptor = UIFontDescriptor(name: name, size: dynamicFontPointSize)
-            if dynamicFontIsBold { toFontDescriptor = toFontDescriptor.fontDescriptorWithSymbolicTraits(UIFontDescriptorSymbolicTraits.TraitBold) }
-            if dynamicFontIsItalic { toFontDescriptor = toFontDescriptor.fontDescriptorWithSymbolicTraits(UIFontDescriptorSymbolicTraits.TraitItalic) }
+            if dynamicFontIsBold { toFontDescriptor = toFontDescriptor.fontDescriptorWithSymbolicTraits(UIFontDescriptorSymbolicTraits.TraitBold)! }
+            if dynamicFontIsItalic { toFontDescriptor = toFontDescriptor.fontDescriptorWithSymbolicTraits(UIFontDescriptorSymbolicTraits.TraitItalic)! }
             
             let font = UIFont(descriptor: toFontDescriptor, size: fontSize ?? 0.0)
             
