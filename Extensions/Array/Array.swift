@@ -6,7 +6,7 @@
 
 import UIKit
 
-extension Array where Element : StringLiteralConvertible {
+extension Array where Element : ExpressibleByStringLiteral {
     func stringWithLineBreaksFromArray() -> String {
         var localSelf = self
         var result = "\(localSelf.removeFirst())"

@@ -7,21 +7,25 @@
 import UIKit
 
 extension UIFont {
-    static func IsKnownTextStyle(style: String?) -> Bool {
+    static func IsKnownTextStyle(_ style: String?) -> Bool {
         guard style != nil else {
             return false
         }
         
         var knownTextStyles: [String] =
-        [UIFontTextStyleBody,
-            UIFontTextStyleHeadline,
-            UIFontTextStyleSubheadline,
-            UIFontTextStyleCaption1,
-            UIFontTextStyleCaption2,
-            UIFontTextStyleFootnote]
+        [UIFontTextStyle.body.rawValue,
+            UIFontTextStyle.headline.rawValue,
+            UIFontTextStyle.subheadline.rawValue,
+            UIFontTextStyle.caption1.rawValue,
+            UIFontTextStyle.caption2.rawValue,
+            UIFontTextStyle.footnote.rawValue]
         
         if #available(iOS 9.0, *) {
-            knownTextStyles += [UIFontTextStyleCallout,UIFontTextStyleTitle1,UIFontTextStyleTitle2,UIFontTextStyleTitle3]
+            let addition: [String] = [UIFontTextStyle.callout.rawValue,
+                                      UIFontTextStyle.title1.rawValue,
+                                      UIFontTextStyle.title2.rawValue,
+                                      UIFontTextStyle.title3.rawValue]
+            knownTextStyles += addition
         }
         
         return knownTextStyles.contains(style!)
@@ -42,17 +46,17 @@ extension UIFont {
     internal struct AppFont {
         // developer.apple.com/library/ios/documentation/StringsTextFonts/Conceptual/TextAndWebiPhoneOS/CustomTextProcessing/CustomTextProcessing.html#//apple_ref/doc/uid/TP40009542-CH4-SW65
         static let name = Globals.AppFontFamily /* e.g. "Georgia" */
-        static let Body = AppFont.FromTextStyle(UIFontTextStyleBody)
-        static let Headline = AppFont.FromTextStyle(UIFontTextStyleHeadline)
-        static let SubHeadline = AppFont.FromTextStyle(UIFontTextStyleSubheadline)
-        static let Caption1 = AppFont.FromTextStyle(UIFontTextStyleCaption1)
-        static let Caption2 = AppFont.FromTextStyle(UIFontTextStyleCaption2)
-        static let Footnote = AppFont.FromTextStyle(UIFontTextStyleFootnote)
+        static let Body = AppFont.FromTextStyle(UIFontTextStyle.body.rawValue)
+        static let Headline = AppFont.FromTextStyle(UIFontTextStyle.headline.rawValue)
+        static let SubHeadline = AppFont.FromTextStyle(UIFontTextStyle.subheadline.rawValue)
+        static let Caption1 = AppFont.FromTextStyle(UIFontTextStyle.caption1.rawValue)
+        static let Caption2 = AppFont.FromTextStyle(UIFontTextStyle.caption2.rawValue)
+        static let Footnote = AppFont.FromTextStyle(UIFontTextStyle.footnote.rawValue)
         
-        @available(iOS 9.0, *)static let Callout = AppFont.FromTextStyle(UIFontTextStyleCallout)
-        @available(iOS 9.0, *) static let Title1 = AppFont.FromTextStyle(UIFontTextStyleTitle1)
-        @available(iOS 9.0, *) static let Title2 = AppFont.FromTextStyle(UIFontTextStyleTitle2)
-        @available(iOS 9.0, *) static let Title3 = AppFont.FromTextStyle(UIFontTextStyleTitle3)
+        @available(iOS 9.0, *)static let Callout = AppFont.FromTextStyle(UIFontTextStyle.callout.rawValue)
+        @available(iOS 9.0, *) static let Title1 = AppFont.FromTextStyle(UIFontTextStyle.title1.rawValue)
+        @available(iOS 9.0, *) static let Title2 = AppFont.FromTextStyle(UIFontTextStyle.title2.rawValue)
+        @available(iOS 9.0, *) static let Title3 = AppFont.FromTextStyle(UIFontTextStyle.title3.rawValue)
         
         
         /**
@@ -67,15 +71,15 @@ extension UIFont {
          
          - Returns: a predefined `UIFont` which has the size (or not, see `fontSize`) and other characteristics of the dynamic font style defined in `style`
          */
-        static func FromTextStyle(style: String, fontSize: CGFloat? = nil) -> UIFont {
-            let dynamicFontDescriptor = UIFontDescriptor.preferredFontDescriptorWithTextStyle(style)
+        static func FromTextStyle(_ style: String, fontSize: CGFloat? = nil) -> UIFont {
+            let dynamicFontDescriptor = UIFontDescriptor.preferredFontDescriptor(withTextStyle: UIFontTextStyle(rawValue: style))
             let dynamicFontPointSize = dynamicFontDescriptor.pointSize
-            let dynamicFontIsBold = (dynamicFontDescriptor.symbolicTraits.rawValue & UIFontDescriptorSymbolicTraits.TraitBold.rawValue) > 0
-            let dynamicFontIsItalic = (dynamicFontDescriptor.symbolicTraits.rawValue & UIFontDescriptorSymbolicTraits.TraitItalic.rawValue) > 0
+            let dynamicFontIsBold = (dynamicFontDescriptor.symbolicTraits.rawValue & UIFontDescriptorSymbolicTraits.traitBold.rawValue) > 0
+            let dynamicFontIsItalic = (dynamicFontDescriptor.symbolicTraits.rawValue & UIFontDescriptorSymbolicTraits.traitItalic.rawValue) > 0
             
             var toFontDescriptor = UIFontDescriptor(name: name, size: dynamicFontPointSize)
-            if dynamicFontIsBold { toFontDescriptor = toFontDescriptor.fontDescriptorWithSymbolicTraits(UIFontDescriptorSymbolicTraits.TraitBold)! }
-            if dynamicFontIsItalic { toFontDescriptor = toFontDescriptor.fontDescriptorWithSymbolicTraits(UIFontDescriptorSymbolicTraits.TraitItalic)! }
+            if dynamicFontIsBold { toFontDescriptor = toFontDescriptor.withSymbolicTraits(UIFontDescriptorSymbolicTraits.traitBold)! }
+            if dynamicFontIsItalic { toFontDescriptor = toFontDescriptor.withSymbolicTraits(UIFontDescriptorSymbolicTraits.traitItalic)! }
             
             let font = UIFont(descriptor: toFontDescriptor, size: fontSize ?? 0.0)
             
@@ -84,14 +88,14 @@ extension UIFont {
     }
     
     var isBold: Bool {
-        return (fontDescriptor().symbolicTraits.rawValue & UIFontDescriptorSymbolicTraits.TraitBold.rawValue) > 0
+        return (fontDescriptor.symbolicTraits.rawValue & UIFontDescriptorSymbolicTraits.traitBold.rawValue) > 0
     }
     
     var isItalic: Bool {
-        return (fontDescriptor().symbolicTraits.rawValue & UIFontDescriptorSymbolicTraits.TraitItalic.rawValue) > 0
+        return (fontDescriptor.symbolicTraits.rawValue & UIFontDescriptorSymbolicTraits.traitItalic.rawValue) > 0
     }
     
     var styleAttribute: String? {
-        return fontDescriptor().fontAttributes()[UIFontDescriptorTextStyleAttribute] as! String?
+        return fontDescriptor.fontAttributes[UIFontDescriptorTextStyleAttribute] as! String?
     }
 }

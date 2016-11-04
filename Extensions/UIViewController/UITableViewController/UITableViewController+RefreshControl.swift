@@ -12,7 +12,7 @@ extension UITableViewController {
      
      - note: if `control` is `nil` nothing happens
      */
-    func beginRefreshing(control: UIRefreshControl?) {
+    func beginRefreshing(_ control: UIRefreshControl?) {
         if control != nil {
             self.tableView.setContentOffset(CGPoint(x: 0, y: self.tableView.contentOffset.y-control!.frame.size.height), animated: true)
             control!.beginRefreshing()
@@ -25,10 +25,10 @@ extension UITableViewController {
      
      - note: if `control` is `nil` nothing happens
      */
-    func endRefreshing(control: UIRefreshControl?) {
+    func endRefreshing(_ control: UIRefreshControl?) {
         if control != nil {
             control!.endRefreshing()
-            self.tableView.setContentOffset(CGPointZero, animated: true)
+            self.tableView.setContentOffset(CGPoint.zero, animated: true)
         }
     }
 }

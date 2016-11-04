@@ -17,7 +17,7 @@ extension UIViewController {
      
      - Returns: `void`
      */
-    func setAppFontForViews(views: [UIView]) {
+    func setAppFontForViews(_ views: [UIView]) {
         for view in views {
             if view.subviews.count > 0 {
                 setAppFontForViews(view.subviews)

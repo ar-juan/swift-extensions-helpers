@@ -10,9 +10,9 @@ import MapKit
 import CoreData
 
 enum LocationManagerAuthorizationType {
-    case None
-    case WhenInUse
-    case Always
+    case none
+    case whenInUse
+    case always
 }
 
 protocol LocationManagerControllerDelegate {
@@ -40,21 +40,21 @@ class LocationManagerController: NSObject, CLLocationManagerDelegate {
             }
         }
     }
-    var minimumAuthorizationStatus: CLAuthorizationStatus? = .NotDetermined {
+    var minimumAuthorizationStatus: CLAuthorizationStatus? = .notDetermined {
         didSet {
             if minimumAuthorizationStatus != nil && minimumAuthorizationStatus != oldValue {
-                if minimumAuthorizationStatus == .AuthorizedWhenInUse {
-                    requestAuthorization(requestedStatus: .AuthorizedWhenInUse, forManager: manager)
+                if minimumAuthorizationStatus == .authorizedWhenInUse {
+                    requestAuthorization(requestedStatus: .authorizedWhenInUse, forManager: manager)
                     manager.requestWhenInUseAuthorization()
-                } else if minimumAuthorizationStatus == .AuthorizedAlways {
+                } else if minimumAuthorizationStatus == .authorizedAlways {
                     manager.requestAlwaysAuthorization()
                 } else {
                     manager.stopUpdatingLocation()
                     manager.stopMonitoringSignificantLocationChanges()
                     for region in manager.monitoredRegions {
-                        manager.stopMonitoringForRegion(region)
+                        manager.stopMonitoring(for: region)
                     }
-                    minimumAuthorizationStatus = .NotDetermined
+                    minimumAuthorizationStatus = .notDetermined
                 }
                 requestAuthorization(requestedStatus: minimumAuthorizationStatus!, forManager: manager)
             }
@@ -63,50 +63,50 @@ class LocationManagerController: NSObject, CLLocationManagerDelegate {
     
     var manager: CLLocationManager!
     static let sharedInstance = LocationManagerController()
-    private override init() {
+    fileprivate override init() {
         super.init()
         
         manager = CLLocationManager()
         manager.delegate = self
         manager.pausesLocationUpdatesAutomatically = true
-        manager.activityType = .Other
+        manager.activityType = .other
         //requestAlwaysAuthorizationForManager(manager)
     } // prevents others from using the default '()' initializer for this class.
     
     
-    private func requestAuthorization(requestedStatus status: CLAuthorizationStatus, forManager manager: CLLocationManager) {
+    fileprivate func requestAuthorization(requestedStatus status: CLAuthorizationStatus, forManager manager: CLLocationManager) {
         let status: CLAuthorizationStatus = CLLocationManager.authorizationStatus()
-        if status != CLAuthorizationStatus.AuthorizedAlways {
+        if status != CLAuthorizationStatus.authorizedAlways {
             manager.requestAlwaysAuthorization()
         }
     }
     
-    func locationManager(manager: CLLocationManager, didChangeAuthorizationStatus status: CLAuthorizationStatus) {
-        if CLLocationManager.authorizationStatus() == .NotDetermined ||
-            CLLocationManager.authorizationStatus() == .Restricted {
+    func locationManager(_ manager: CLLocationManager, didChangeAuthorization status: CLAuthorizationStatus) {
+        if CLLocationManager.authorizationStatus() == .notDetermined ||
+            CLLocationManager.authorizationStatus() == .restricted {
             // do nothing yet
         } else if CLLocationManager.authorizationStatus() != minimumAuthorizationStatus {
             logthis("authorization status failed: \(CLLocationManager.authorizationStatus())")
             
             if let popupMessage = delegate?.messageForPopupIfLocationAuthorizationRequestFailed() {
-                let alertController = UIAlertController(title: popupMessage.title, message: popupMessage.message, preferredStyle: .Alert)
+                let alertController = UIAlertController(title: popupMessage.title, message: popupMessage.message, preferredStyle: .alert)
                 if popupMessage.goToSetingsActionTitle != nil {
-                    alertController.addAction(UIAlertAction(title: popupMessage.goToSetingsActionTitle, style: .Default, handler: { (_) in
-                        let url: NSURL = NSURL(string: UIApplicationOpenSettingsURLString)!
-                        UIApplication.sharedApplication().openURL(url)
+                    alertController.addAction(UIAlertAction(title: popupMessage.goToSetingsActionTitle, style: .default, handler: { (_) in
+                        let url: URL = URL(string: UIApplicationOpenSettingsURLString)!
+                        UIApplication.shared.openURL(url)
                     }))
                 }
-                alertController.addAction(UIAlertAction(title: popupMessage.dismissActionTitle, style: .Default, handler: nil))
+                alertController.addAction(UIAlertAction(title: popupMessage.dismissActionTitle, style: .default, handler: nil))
                 
-                dispatch_async(dispatch_get_main_queue(), {
+                DispatchQueue.main.async(execute: {
                     alertController.show()
                 })
             }
-        } else if minimumAuthorizationStatus == .AuthorizedAlways && UIApplication.sharedApplication().backgroundRefreshStatus != .Available {
+        } else if minimumAuthorizationStatus == .authorizedAlways && UIApplication.shared.backgroundRefreshStatus != .available {
             logthis("note: backgroundRefresh not available. Current status: \(CLLocationManager.authorizationStatus())")
         } else if CLLocationManager.locationServicesEnabled() == false {
             logthis("locationServicesEnabled == false")
-        } else if minimumAuthorizationStatus == .AuthorizedAlways && !CLLocationManager.isMonitoringAvailableForClass(CLCircularRegion) {
+        } else if minimumAuthorizationStatus == .authorizedAlways && !CLLocationManager.isMonitoringAvailable(for: CLCircularRegion.self) {
             logthis("isMonitoringAvailableForClass == false")
         }
     }
@@ -114,11 +114,11 @@ class LocationManagerController: NSObject, CLLocationManagerDelegate {
     
     // CLLocationManagerDelegate
     
-    func locationManagerDidPauseLocationUpdates(manager: CLLocationManager) {
+    func locationManagerDidPauseLocationUpdates(_ manager: CLLocationManager) {
         logthis()
     }
     
-    func locationManagerDidResumeLocationUpdates(manager: CLLocationManager) {
+    func locationManagerDidResumeLocationUpdates(_ manager: CLLocationManager) {
         logthis()
     }
     
@@ -130,15 +130,15 @@ class LocationManagerController: NSObject, CLLocationManagerDelegate {
     //        logthis()
     //    }
     
-    func locationManager(manager: CLLocationManager, didStartMonitoringForRegion region: CLRegion) {
+    func locationManager(_ manager: CLLocationManager, didStartMonitoringFor region: CLRegion) {
         //logthis()
     }
     
-    func locationManager(manager: CLLocationManager, monitoringDidFailForRegion region: CLRegion?, withError error: NSError) {
+    func locationManager(_ manager: CLLocationManager, monitoringDidFailFor region: CLRegion?, withError error: Error) {
         logthis()
     }
     
-    func locationManager(manager: CLLocationManager, didUpdateLocations locations: [CLLocation]) {
+    func locationManager(_ manager: CLLocationManager, didUpdateLocations locations: [CLLocation]) {
         logthis()
     }
 }

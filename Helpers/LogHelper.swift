@@ -6,7 +6,7 @@
 
 import Foundation
 
-/*global*/ func logthis(msg:String = "", function: String = #function, file: String = #file, line: Int = #line){
+/*global*/ func logthis(_ msg:String = "", function: String = #function, file: String = #file, line: Int = #line){
     let str = "\(LogHelper.sharedInstance.makeTag(function, file: file, line: line)) \(msg)"
     
     print(str)
@@ -14,30 +14,30 @@ import Foundation
 }
 
 protocol LogHelperDelegate {
-    func LogHelperLogsString(string: String)
+    func LogHelperLogsString(_ string: String)
 }
 
 struct LogHelper {
     static var sharedInstance: LogHelper = LogHelper()
-    private init() {}
+    fileprivate init() {}
     
     var delegate: LogHelperDelegate?
     
-    private func makeTag(function: String, file: String, line: Int) -> String{
+    fileprivate func makeTag(_ function: String, file: String, line: Int) -> String{
         var lineStr = "[\(line)]"
-        let url = NSURL(fileURLWithPath: file)
-        let fileName:String! = url.lastPathComponent == nil ? file : url.lastPathComponent!
-        let toArray = fileName.componentsSeparatedByString(".")
+        let url = URL(fileURLWithPath: file)
+        let fileName:String! = url.lastPathComponent.isEmpty ? file : url.lastPathComponent
+        let toArray = fileName.components(separatedBy: ".")
         let className = toArray.first ?? ""
-        var shortClassName = className.stringByReplacingOccurrencesOfString("ViewController", withString: "VC")
+        var shortClassName = className.replacingOccurrences(of: "ViewController", with: "VC")
        
         let minLineNumberLength = 6
         let desiredClassNameLength = 25
         
         let ellipsis = "..."
         if shortClassName.characters.count > (desiredClassNameLength) {
-            let beg = shortClassName.substringToIndex(shortClassName.startIndex.advancedBy(desiredClassNameLength / 2 - ellipsis.characters.count))
-            let end = shortClassName.substringFromIndex(shortClassName.endIndex.advancedBy(-desiredClassNameLength / 2))
+            let beg = shortClassName.substring(to: shortClassName.characters.index(shortClassName.startIndex, offsetBy: desiredClassNameLength / 2 - ellipsis.characters.count))
+            let end = shortClassName.substring(from: shortClassName.characters.index(shortClassName.endIndex, offsetBy: -desiredClassNameLength / 2))
             shortClassName = "\(beg)\(ellipsis)\(end)"
         }
         

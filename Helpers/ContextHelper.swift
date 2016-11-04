@@ -12,16 +12,16 @@ class ContextHelper {
     static let DatabaseAvailabilityContext = "DatabaseAvailabilityContext"
     
     static let sharedInstance = ContextHelper()
-    private(set) var context: NSManagedObjectContext! { didSet {
+    fileprivate(set) var context: NSManagedObjectContext! { didSet {
             // post notification: WE HAVE THE CONTEXT
             // let everyone who might be interested know this context is available
             // this happens very early in the running of our application
             // it would make NO SENSE to listen to this radio station in a View Controller that was segued to, for example
             // (but that's okay because a segued-to View Controller would presumably be "prepared" by being given a context to work in)
-            assert(NSThread.isMainThread())
+            assert(Thread.isMainThread)
             if context != nil {
                 let userInfo: [String: NSManagedObjectContext] = [ContextHelper.DatabaseAvailabilityContext: context]
-                NSNotificationCenter.defaultCenter().postNotificationName(ContextHelper.DatabaseAvailabilityNotificationName, object: self, userInfo: userInfo)
+                NotificationCenter.default.post(name: Notification.Name(rawValue: ContextHelper.DatabaseAvailabilityNotificationName), object: self, userInfo: userInfo)
             }
         }
     }
@@ -30,11 +30,11 @@ class ContextHelper {
      Asynchronously performs a block on the context's queue (main queue)
      - note: don't forget to call `performBlock(andWait)` on the `context`
     */
-    func useContextWithOperation(operation: ((context: NSManagedObjectContext)->Void)) {
+    func useContextWithOperation(_ operation: @escaping ((_ context: NSManagedObjectContext)->Void)) {
         //let context = self.context
         if self.context == nil && self.preparingDocument == true { // if we're currently getting / creating the database
-            let dispatchTime: dispatch_time_t = dispatch_time(DISPATCH_TIME_NOW, Int64(0.5 * Double(NSEC_PER_SEC)))
-            dispatch_after(dispatchTime, dispatch_get_main_queue(), {
+            let dispatchTime: DispatchTime = DispatchTime.now() + Double(Int64(0.5 * Double(NSEC_PER_SEC))) / Double(NSEC_PER_SEC)
+            DispatchQueue.main.asyncAfter(deadline: dispatchTime, execute: {
                 // tehn try again in half a second
                 self.useContextWithOperation(operation)
             })
@@ -42,11 +42,11 @@ class ContextHelper {
             if self.context == nil { // but it doesnt exist yet
                 // this could happen
                 self.prepareDatabaseWhenDone({ (success: Bool, context: NSManagedObjectContext?) in
-                    if success && context != nil { operation(context: context!) }
+                    if success && context != nil { operation(context!) }
                     else { logthis("preparing database failed") }
                 })
             } else {
-                operation(context: self.context)
+                operation(self.context)
 //                context.performBlockAndWait({ 
 //                    operation(context: self.context)
 //                })
@@ -54,11 +54,11 @@ class ContextHelper {
         }
     }
     
-    private init() {} // prevents others from using the default '()' initializer for this class.
-    private var preparingDocument: Bool = false
+    fileprivate init() {} // prevents others from using the default '()' initializer for this class.
+    fileprivate var preparingDocument: Bool = false
     
-    func prepareDatabaseWhenDone(whenDone: ((success: Bool, context: NSManagedObjectContext?) -> Void)?) {
-        guard let appName = NSBundle.mainBundle().infoDictionary![kCFBundleNameKey as String] as? String else {
+    func prepareDatabaseWhenDone(_ whenDone: ((_ success: Bool, _ context: NSManagedObjectContext?) -> Void)?) {
+        guard let appName = Bundle.main.infoDictionary![kCFBundleNameKey as String] as? String else {
             fatalError("no appname")
         }
         
@@ -69,11 +69,11 @@ class ContextHelper {
         
         let modelName = "Model"
         // The managed object model for the application. This property is not optional. It is a fatal error for the application not to be able to find and load its model.
-        guard let modelURL = NSBundle.mainBundle().URLForResource(modelName, withExtension: "momd") else {
+        guard let modelURL = Bundle.main.url(forResource: modelName, withExtension: "momd") else {
             fatalError("error loading NSBundle.mainBundle().URLForResource(\"\(modelName)\", withExtension: \"momd\"). Call your main model \"Model.xcdatamodeld\"")
         }
         
-        guard let managedObjectModel = NSManagedObjectModel(contentsOfURL: modelURL) else {
+        guard let managedObjectModel = NSManagedObjectModel(contentsOf: modelURL) else {
             fatalError("cannot create mom")
         }
         
@@ -84,60 +84,60 @@ class ContextHelper {
         //Encrypted Core Data github.com/project-imas/encrypted-core-data
         //let coordinator = EncryptedStore.makeStore(managedObjectModel, passcode: "KmmWcFuq21sTie8Z3Imb8U2K9E3LR9fj4C90gWy0GFGBafU8XL2CrdoYCUcLsDssf713L4KwnUGhrJgPOpSLqiMYFmeNCLqzc4tc")
         
-        let managedObjectContext = NSManagedObjectContext(concurrencyType: .MainQueueConcurrencyType)
+        let managedObjectContext = NSManagedObjectContext(concurrencyType: .mainQueueConcurrencyType)
         managedObjectContext.persistentStoreCoordinator = coordinator
         
         
         /*
         As part of the initialization of Core Data, assign the adding of the persistent store (NSPersistentStore) to the persistent store coordinator (NSPersistentStoreCoordinator) to a background queue. That action can take an unknown amount of time, and performing it on the main queue can block the user interface, possibly causing the application to terminate.
         */
-        dispatch_async(dispatch_get_global_queue(DISPATCH_QUEUE_PRIORITY_BACKGROUND, 0)) {
-            let url = self.applicationDocumentsDirectory.URLByAppendingPathComponent("\(appName)CoreData.sqlite")
+        DispatchQueue.global(qos: DispatchQoS.QoSClass.background).async {
+            let url = self.applicationDocumentsDirectory.appendingPathComponent("\(appName)CoreData.sqlite")
             let failureReason = "There was an error creating or loading the application's saved data."
             do {
                 let options = [NSMigratePersistentStoresAutomaticallyOption: true, NSInferMappingModelAutomaticallyOption: true]
-                try coordinator.addPersistentStoreWithType(NSSQLiteStoreType, configuration: nil, URL: url, options: options)
+                try coordinator.addPersistentStore(ofType: NSSQLiteStoreType, configurationName: nil, at: url, options: options)
                 
                 if #available(iOS 9.0, *) {
                     managedObjectContext.shouldDeleteInaccessibleFaults = true
                 }
                 
-                dispatch_async(dispatch_get_main_queue(), { () -> Void in
+                DispatchQueue.main.async(execute: { () -> Void in
                     self.context = managedObjectContext
-                    whenDone?(success: true, context: self.context)
+                    whenDone?(true, self.context)
                 })
                 self.preparingDocument = false
 
             } catch {
                 // Report any error we got.
                 var dict = [String: AnyObject]()
-                dict[NSLocalizedDescriptionKey] = "Failed to initialize the application's saved data"
-                dict[NSLocalizedFailureReasonErrorKey] = failureReason
+                dict[NSLocalizedDescriptionKey] = "Failed to initialize the application's saved data" as AnyObject?
+                dict[NSLocalizedFailureReasonErrorKey] = failureReason as AnyObject?
                 
                 dict[NSUnderlyingErrorKey] = error as NSError
                 let wrappedError = NSError(domain: "YOUR_ERROR_DOMAIN", code: 9999, userInfo: dict)
                 
-                dispatch_async(dispatch_get_main_queue(), { () -> Void in
+                DispatchQueue.main.async(execute: { () -> Void in
                     logthis("Unresolved error \(wrappedError), \(wrappedError.userInfo)")
-                    whenDone?(success: false, context: nil)
+                    whenDone?(false, nil)
                 })
                 self.preparingDocument = false
             }
         }
     }
     
-    private lazy var applicationDocumentsDirectory: NSURL = {
+    fileprivate lazy var applicationDocumentsDirectory: URL = {
         // The directory the application uses to store the Core Data store file. This code uses a directory named "%%%bundle identifier%%%" in the application's documents Application Support directory.
-        let urls = NSFileManager.defaultManager().URLsForDirectory(.DocumentDirectory, inDomains: .UserDomainMask)
+        let urls = FileManager.default.urls(for: .documentDirectory, in: .userDomainMask)
         return urls[urls.count-1]
     }()
     
     
-    static let lockQueue: dispatch_queue_t = dispatch_queue_create("com.App.LockQueue", nil)
-    private func checkAndSetPreparingDocument() -> Bool {
+    static let lockQueue: DispatchQueue = DispatchQueue(label: "com.App.LockQueue", attributes: [])
+    fileprivate func checkAndSetPreparingDocument() -> Bool {
         // We need to make sure that only one process can access this property _preparingDocument at the same time:
         var result: Bool = false
-        dispatch_sync(ContextHelper.lockQueue, { () -> Void in
+        ContextHelper.lockQueue.sync(execute: { () -> Void in
             if !self.preparingDocument {
                 self.preparingDocument = true
             } else {

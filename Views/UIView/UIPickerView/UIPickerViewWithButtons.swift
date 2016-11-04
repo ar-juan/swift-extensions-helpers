@@ -26,17 +26,17 @@ class UIPickerViewWithButtons: UIPickerView {
     var doneButtonTitle = "Klaar"
     
     func setup() {
-        toolBar.barStyle = UIBarStyle.Default
-        toolBar.translucent = true
+        toolBar.barStyle = UIBarStyle.default
+        toolBar.isTranslucent = true
         toolBar.tintColor = UIColor(white: 0.3, alpha: 1)
         toolBar.sizeToFit()
         
-        doneButton = UIBarButtonItem(title: doneButtonTitle, style: UIBarButtonItemStyle.Plain, target: self, action: #selector(UIPickerViewWithButtons.donePicker))
-        let spaceButton = UIBarButtonItem(barButtonSystemItem: UIBarButtonSystemItem.FlexibleSpace, target: nil, action: nil)
-        cancelButton = UIBarButtonItem(title: cancelButtonTitle, style: UIBarButtonItemStyle.Plain, target: self, action: #selector(UIPickerViewWithButtons.cancelPicker))
+        doneButton = UIBarButtonItem(title: doneButtonTitle, style: UIBarButtonItemStyle.plain, target: self, action: #selector(UIPickerViewWithButtons.donePicker))
+        let spaceButton = UIBarButtonItem(barButtonSystemItem: UIBarButtonSystemItem.flexibleSpace, target: nil, action: nil)
+        cancelButton = UIBarButtonItem(title: cancelButtonTitle, style: UIBarButtonItemStyle.plain, target: self, action: #selector(UIPickerViewWithButtons.cancelPicker))
         
         toolBar.setItems([cancelButton, spaceButton, doneButton], animated: false)
-        toolBar.userInteractionEnabled = true
+        toolBar.isUserInteractionEnabled = true
     }
     
     func cancelPicker() {

@@ -13,13 +13,13 @@ extension UIAlertController {
         present(animated: false, completion: nil)
     }
     
-    func present(animated animated: Bool, completion: (() -> Void)?) {
-        if let rootVC = UIApplication.sharedApplication().keyWindow?.rootViewController {
+    func present(animated: Bool, completion: (() -> Void)?) {
+        if let rootVC = UIApplication.shared.keyWindow?.rootViewController {
             presentFromController(rootVC, animated: animated, completion: completion)
         }
     }
     
-    private func presentFromController(controller: UIViewController, animated: Bool, completion: (() -> Void)?) {
+    fileprivate func presentFromController(_ controller: UIViewController, animated: Bool, completion: (() -> Void)?) {
         if let navVC = controller as? UINavigationController,
             let visibleVC = navVC.visibleViewController {
             presentFromController(visibleVC, animated: animated, completion: completion)
@@ -32,7 +32,7 @@ extension UIAlertController {
             {
                 if controller.view.window != nil { // if controller is on screen
                 //NSOperationQueue.mainQueue().addOperationWithBlock {
-                    controller.presentViewController(self, animated: animated, completion: completion)
+                    controller.present(self, animated: animated, completion: completion)
                 //    }
                 }
             }
@@ -40,9 +40,9 @@ extension UIAlertController {
     
     
     // Korte route
-    class func alertWithTitle(title: String?, message: String, buttonTitle: String, buttonCompletion: ((UIAlertAction) -> Void)?) -> UIAlertController {
-        let ac = UIAlertController(title: title, message: message, preferredStyle: .Alert)
-        ac.addAction(UIAlertAction(title: buttonTitle, style: .Default, handler: buttonCompletion))
+    class func alertWithTitle(_ title: String?, message: String, buttonTitle: String, buttonCompletion: ((UIAlertAction) -> Void)?) -> UIAlertController {
+        let ac = UIAlertController(title: title, message: message, preferredStyle: .alert)
+        ac.addAction(UIAlertAction(title: buttonTitle, style: .default, handler: buttonCompletion))
         return ac
     }
 }

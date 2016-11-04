@@ -9,7 +9,7 @@ import UIKit
 class PresentingSegue: UIStoryboardSegue {
     
     override func perform() {
-        sourceViewController.presentViewController(self.destinationViewController, animated: false, completion: nil)
+        source.present(self.destination, animated: false, completion: nil)
     }
 
  //   [[self sourceViewController] presentViewController:[self destinationViewController] animated:NO completion:nil];

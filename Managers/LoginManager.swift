@@ -37,7 +37,7 @@ protocol LoginManagerDelegate {
  */
 class LoginManager {
     static let sharedLoginManager = LoginManager() // Singleton pattern
-    private init() {} // prevents others from using the default '()' initializer for this class.
+    fileprivate init() {} // prevents others from using the default '()' initializer for this class.
     var delegate: LoginManagerDelegate?
     let loginVCStoryboardIdentifier = "Login VC"
     
@@ -53,11 +53,11 @@ class LoginManager {
      - the getProducts request returns: unauthorized, invalid token
      - loop
      */
-    private let concurrentLoginQueue: dispatch_queue_t = {
-        guard let appName = NSBundle.mainBundle().infoDictionary![kCFBundleNameKey as String] as? String else {
+    fileprivate let concurrentLoginQueue: DispatchQueue = {
+        guard let appName = Bundle.main.infoDictionary![kCFBundleNameKey as String] as? String else {
             fatalError("no appname")
         }
-        return dispatch_queue_create("nl.\(appName).LoginManager.concurrentLoginQueue", DISPATCH_QUEUE_CONCURRENT)
+        return DispatchQueue(label: "nl.\(appName).LoginManager.concurrentLoginQueue", attributes: DispatchQueue.Attributes.concurrent)
     }()
     
 //    /**
@@ -97,21 +97,21 @@ class LoginManager {
      
      In case of a valid JSON response, `completionHandler(success:true, responseDict:json)` is called.
      */
-    func login(JSONPostData JSONPostData: Dictionary<String, AnyObject>, URLString: String, completionHandler: ((success: Bool, responseDict: [String:AnyObject]?, statusCode: Int) -> Void)?) {
-        dispatch_barrier_async(concurrentLoginQueue) {
-            if !NSJSONSerialization.isValidJSONObject(JSONPostData) {
+    func login(JSONPostData: Dictionary<String, AnyObject>, URLString: String, completionHandler: ((_ success: Bool, _ responseDict: [String:AnyObject]?, _ statusCode: Int) -> Void)?) {
+        concurrentLoginQueue.async(flags: .barrier, execute: {
+            if !JSONSerialization.isValidJSONObject(JSONPostData) {
                 logthis("no valid JSON")
-                completionHandler?(success: false, responseDict: nil, statusCode: 0)
+                completionHandler?(false, nil, 0)
             }
             
             do {
-                let jsonData = try NSJSONSerialization.dataWithJSONObject(JSONPostData, options: [])
+                let jsonData = try JSONSerialization.data(withJSONObject: JSONPostData, options: [])
                 AppConnectionManager.sharedInstance.postAppData(jsonData,
                                                                 toURLString: URLString,
-                                                                postType: PostType.JSON,
-                                                                onSuccess: { (responseData: NSData?) in
+                                                                postType: PostType.json,
+                                                                onSuccess: { (responseData: Data?) in
                                                                     guard let data = responseData else {
-                                                                        completionHandler?(success: false, responseDict: nil, statusCode: 0)
+                                                                        completionHandler?(/*success: */false, /*responseDict: */nil, /*statusCode: */0)
                                                                         return
                                                                     }
                                                                     
@@ -119,31 +119,31 @@ class LoginManager {
                                                                         
                                                                     {
                                                                         guard let json =
-                                                                            try NSJSONSerialization.JSONObjectWithData(data, options: []) as? [String:AnyObject] else {
+                                                                            try JSONSerialization.jsonObject(with: data, options: []) as? [String:AnyObject] else {
                                                                                 
-                                                                                completionHandler?(success: false, responseDict: nil, statusCode: 0)
+                                                                                completionHandler?(/*success: */false, /*responseDict: */nil, /*statusCode: */0)
                                                                                 return
                                                                         }
                                                                         
                                                                         logthis("json: \(json)")
-                                                                        completionHandler?(success: true, responseDict: json, statusCode: 0)
+                                                                        completionHandler?(/*success: */true, /*responseDict: */json, /*statusCode: */0)
                                                                     }
                                                                         
                                                                     catch let error as NSError
                                                                         
                                                                     {
                                                                         logthis(error.localizedDescription)
-                                                                        completionHandler?(success: false, responseDict: nil, statusCode: 0)
+                                                                        completionHandler?(/*success: */false, /*responseDict: */nil, /*statusCode: */0)
                                                                     }
                                                                     
                     }, onError: { (statusCode: Int) in
-                        completionHandler?(success: false, responseDict: nil, statusCode: statusCode)
+                        completionHandler?(/*success: */false, /* responseDict: */nil, /*statusCode: */statusCode)
                         
                     }, attemptNumber: 1)
             } catch {
                 logthis("error creating JSON")
             }
-        }
+        }) 
     }
     
     
@@ -158,8 +158,8 @@ class LoginManager {
         */
         if delegate == nil || (delegate != nil && !delegate!.currentlyShowingLoginScreen()) {
 
-            let lvc = presentingVC?.storyboard!.instantiateViewControllerWithIdentifier(loginVCStoryboardIdentifier)
-            if lvc != nil { presentingVC!.presentViewController(lvc!, animated: true, completion: nil) }
+            let lvc = presentingVC?.storyboard!.instantiateViewController(withIdentifier: loginVCStoryboardIdentifier)
+            if lvc != nil { presentingVC!.present(lvc!, animated: true, completion: nil) }
         }
     }
 }

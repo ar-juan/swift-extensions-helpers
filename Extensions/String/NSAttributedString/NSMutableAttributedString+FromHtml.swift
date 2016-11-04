@@ -9,13 +9,13 @@
 import UIKit
 
 extension NSMutableAttributedString {
-    class func fromHtml(html: String, font: UIFont) -> NSMutableAttributedString? {
+    class func fromHtml(_ html: String, font: UIFont) -> NSMutableAttributedString? {
         var html = html
         html += "<style>body{font-family: '\(font.fontName)'; font-size:\(font.pointSize);}</style>"
-        let encodedData = html.dataUsingEncoding(NSUTF8StringEncoding)!
+        let encodedData = html.data(using: String.Encoding.utf8)!
         let attributedOptions : [String: AnyObject] = [
-            NSDocumentTypeDocumentAttribute: NSHTMLTextDocumentType,
-            NSCharacterEncodingDocumentAttribute: NSUTF8StringEncoding
+            NSDocumentTypeDocumentAttribute: NSHTMLTextDocumentType as AnyObject,
+            NSCharacterEncodingDocumentAttribute: NSNumber(value: String.Encoding.utf8.rawValue) as AnyObject
         ]
         var attributedString: NSMutableAttributedString? = nil
         do {

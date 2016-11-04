@@ -7,17 +7,19 @@
 import UIKit
 import CoreData
 
+
 class CoreDataTableViewController: UITableViewController, NSFetchedResultsControllerDelegate {
+    
     var debug: Bool = false
     //var managedObjectContext: NSManagedObjectContext? = nil    
     
     // MARK: - Table View Datasource & Delegate methods
-    override func numberOfSectionsInTableView(tableView: UITableView) -> Int {
+    override func numberOfSections(in tableView: UITableView) -> Int {
         if debug { print("number of sections: \(self.fetchedResultsController?.sections?.count ?? 0)") }
         return self.fetchedResultsController?.sections?.count ?? 0
     }
     
-    override func tableView(tableView: UITableView, numberOfRowsInSection section: Int) -> Int {
+    override func tableView(_ tableView: UITableView, numberOfRowsInSection section: Int) -> Int {
         let sectionInfo = self.fetchedResultsController?.sections![section]
         if debug { print("\(sectionInfo?.numberOfObjects ?? 0) rows in section \(section)") }
         
@@ -25,15 +27,15 @@ class CoreDataTableViewController: UITableViewController, NSFetchedResultsContro
         
     }
     
-    override func tableView(tableView: UITableView, titleForHeaderInSection section: Int) -> String? {
+    override func tableView(_ tableView: UITableView, titleForHeaderInSection section: Int) -> String? {
         return self.fetchedResultsController?.sections![section].name
     }
     
-    override func tableView(tableView: UITableView, sectionForSectionIndexTitle title: String, atIndex index: Int) -> Int {
-        return self.fetchedResultsController?.sectionForSectionIndexTitle(title, atIndex: index) ?? 0
+    override func tableView(_ tableView: UITableView, sectionForSectionIndexTitle title: String, at index: Int) -> Int {
+        return self.fetchedResultsController?.section(forSectionIndexTitle: title, at: index) ?? 0
     }
     
-    override func sectionIndexTitlesForTableView(tableView: UITableView) -> [String]? {
+    override func sectionIndexTitles(for tableView: UITableView) -> [String]? {
         return self.fetchedResultsController?.sectionIndexTitles
     }
     
@@ -41,23 +43,23 @@ class CoreDataTableViewController: UITableViewController, NSFetchedResultsContro
     // MARK: - Fetched results controller
     func performFetch() {
         if self.fetchedResultsController?.fetchRequest.predicate != nil {
-            if self.debug { print("\(String(self.dynamicType)).\(#function) fetching \(self.fetchedResultsController?.fetchRequest.entityName) with predicate: \(self.fetchedResultsController?.fetchRequest.predicate)") }
+            if self.debug { print("\(String(describing: type(of: self))).\(#function) fetching \(self.fetchedResultsController?.fetchRequest.entityName) with predicate: \(self.fetchedResultsController?.fetchRequest.predicate)") }
         } else {
-            if self.debug { print("\(String(self.dynamicType)).\(#function) fetching all \(self.fetchedResultsController?.fetchRequest.entityName) (i.e. no predicate)") }
+            if self.debug { print("\(String(describing: type(of: self))).\(#function) fetching all \(self.fetchedResultsController?.fetchRequest.entityName) (i.e. no predicate)") }
         }
         do
         {
             try self.fetchedResultsController?.performFetch()
         }
         catch let error as NSError {
-            print("\(String(self.dynamicType)).\(#function) performFetch: failed")
-            print("\(String(self.dynamicType)).\(#function) \(error.localizedDescription) (\(error.localizedFailureReason))")
+            print("\(String(describing: type(of: self))).\(#function) performFetch: failed")
+            print("\(String(describing: type(of: self))).\(#function) \(error.localizedDescription) (\(error.localizedFailureReason))")
         }
         self.tableView.reloadData()
     }
     
     private var warned: Bool = false
-    var fetchedResultsController: NSFetchedResultsController? {
+    var fetchedResultsController: NSFetchedResultsController<NSFetchRequestResult>? {
         get {
             if _fetchedResultsController == nil && !warned {
                 //logthis("Note: Subclass must setup fetchedResultsController. Ignore this warning if you set it up later in the view controller life cycle")
@@ -75,60 +77,60 @@ class CoreDataTableViewController: UITableViewController, NSFetchedResultsContro
                     self.title = newfrc?.fetchRequest.entity?.name
                 }
                 if newfrc != nil {
-                    if self.debug { print("\(String(self.dynamicType)).\(#function) \(oldfrc != nil ? "updated" : "set")") }
+                    if self.debug { print("\(String(describing: type(of: self))).\(#function) \(oldfrc != nil ? "updated" : "set")") }
                     self.performFetch()
                 } else {
-                    if self.debug { print("\(String(self.dynamicType)).\(#function) reset to nil") }
+                    if self.debug { print("\(String(describing: type(of: self))).\(#function) reset to nil") }
                     self.tableView.reloadData()
                 }
             }
         }
     }
-    var _fetchedResultsController: NSFetchedResultsController? = nil
+    var _fetchedResultsController: NSFetchedResultsController<NSFetchRequestResult>? = nil
     
     
     // MARK: - NSFetchedResultsControllerDelegate
-    func controllerWillChangeContent(controller: NSFetchedResultsController) {
+    func controllerWillChangeContent(_ controller: NSFetchedResultsController<NSFetchRequestResult>) {
         self.tableView.beginUpdates()
     }
     
-    func controller(controller: NSFetchedResultsController, didChangeSection sectionInfo: NSFetchedResultsSectionInfo, atIndex sectionIndex: Int, forChangeType type: NSFetchedResultsChangeType) {
+    func controller(_ controller: NSFetchedResultsController<NSFetchRequestResult>, didChange sectionInfo: NSFetchedResultsSectionInfo, atSectionIndex sectionIndex: Int, for type: NSFetchedResultsChangeType) {
         switch type {
         case NSFetchedResultsChangeType(rawValue: 0)!:
             //logthis("iOS 8 bug - Do nothing if we get an invalid change type.")
             break;
-        case .Insert:
-            self.tableView.insertSections(NSIndexSet(index: sectionIndex), withRowAnimation: .Fade)
-        case .Delete:
-            self.tableView.deleteSections(NSIndexSet(index: sectionIndex), withRowAnimation: .Fade)
+        case .insert:
+            self.tableView.insertSections(IndexSet(integer: sectionIndex), with: .fade)
+        case .delete:
+            self.tableView.deleteSections(IndexSet(integer: sectionIndex), with: .fade)
         default:
             return
         }
     }
     
-    func controller(controller: NSFetchedResultsController, didChangeObject anObject: AnyObject, atIndexPath indexPath: NSIndexPath?, forChangeType type: NSFetchedResultsChangeType, newIndexPath: NSIndexPath?) {
+    func controller(_ controller: NSFetchedResultsController<NSFetchRequestResult>, didChange anObject: Any, at indexPath: IndexPath?, for type: NSFetchedResultsChangeType, newIndexPath: IndexPath?) {
         switch type {
         case NSFetchedResultsChangeType(rawValue: 0)!:
             //logthis("iOS 8 bug - Do nothing if we get an invalid change type.")
             break;
-        case .Insert:
-            tableView.insertRowsAtIndexPaths([newIndexPath!], withRowAnimation: .Fade)
-        case .Delete:
-            tableView.deleteRowsAtIndexPaths([indexPath!], withRowAnimation: .Fade)
-        case .Update:
-            tableView.reloadRowsAtIndexPaths([indexPath!], withRowAnimation: .Fade)
-            //self.configureCell(tableView.cellForRowAtIndexPath(indexPath!)!, withObject: anObject as! NSManagedObject)
-        case .Move:
-            // Fixes a bug where indexPath == newIndexPath: 
+        case .insert:
+            tableView.insertRows(at: [newIndexPath!], with: .fade)
+        case .delete:
+            tableView.deleteRows(at: [indexPath!], with: .fade)
+        case .update:
+            tableView.reloadRows(at: [indexPath!], with: .fade)
+        //self.configureCell(tableView.cellForRowAtIndexPath(indexPath!)!, withObject: anObject as! NSManagedObject)
+        case .move:
+            // Fixes a bug where indexPath == newIndexPath:
             // Which gives error: Attempt to create two animations for cell with userInfo (null)
             // similar to stackoverflow.com/questions/31383760/ which has more solutions
             if indexPath != newIndexPath {
-                tableView.moveRowAtIndexPath(indexPath!, toIndexPath: newIndexPath!)
+                tableView.moveRow(at: indexPath!, to: newIndexPath!)
             }
         }
     }
     
-    func controllerDidChangeContent(controller: NSFetchedResultsController) {
+    func controllerDidChangeContent(_ controller: NSFetchedResultsController<NSFetchRequestResult>) {
         self.tableView.endUpdates()
     }
 

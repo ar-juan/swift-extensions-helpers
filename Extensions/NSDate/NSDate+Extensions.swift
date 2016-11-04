@@ -8,8 +8,15 @@
 
 import Foundation
 
-extension NSDate {
+extension Date {
     var isToday: Bool {
-        return (NSCalendar.currentCalendar().compareDate(self, toDate: NSDate(), toUnitGranularity: NSCalendarUnit.Day) == .OrderedSame)
+        return ((Calendar.current as NSCalendar).compare(self, to: Date(), toUnitGranularity: NSCalendar.Unit.day) == .orderedSame)
     }
 }
+
+extension NSDate {
+    var isToday: Bool {
+        return ((Calendar.current as NSCalendar).compare(self as Date, to: Date(), toUnitGranularity: NSCalendar.Unit.day) == .orderedSame)
+    }
+}
+

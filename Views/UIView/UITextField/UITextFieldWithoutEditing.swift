@@ -11,11 +11,11 @@ import UIKit
  Only its primary input method (e.g. keyboard) is allowed.
  */
 class UITextFieldWithoutEditing: UITextField {    
-    override func selectionRectsForRange(range: UITextRange) -> [AnyObject] {
+    override func selectionRects(for range: UITextRange) -> [Any] {
         return []
     }
     
-    override func canPerformAction(action: Selector, withSender sender: AnyObject?) -> Bool {
+    override func canPerformAction(_ action: Selector, withSender sender: Any?) -> Bool {
         // Disable copy, select all, paste
         // Swift 2.3 breekt dit, weet nog niet waarom
         /*if action == #selector(NSObject.copy(_:)) || action == #selector(NSObject.selectAll(_:)) || action == #selector(NSObject.paste(_:)) {
