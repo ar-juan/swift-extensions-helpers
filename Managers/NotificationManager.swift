@@ -18,19 +18,19 @@ import UIKit
 class AppNotificationManager: NotificationManagerDelegate {
     static let sharedInstance = AppNotificationManager()
     let manager = NotificationManager.sharedInstance
+    var context: NSManagedObjectContext?
     
     private init() {
         manager.delegate = self
         
         // If we are called BEFORE context has been set
-        NSNotificationCenter.defaultCenter().addObserverForName(Globals.DatabaseAvailabilityNotificationName, object: nil, queue: nil) { (let notification: NSNotification) in
-            if let userInfo = notification.userInfo as? [String: NSManagedObjectContext]
-                where userInfo[Globals.DatabaseAvailabilityContext] != nil {
+        NotificationCenter.default.addObserver(forName: NSNotification.Name(Globals.DatabaseAvailabilityNotificationName), object: nil, queue: nil, using: { (notification) -> Void in
+            if let userInfo = notification.userInfo as? [String: NSManagedObjectContext], /* where */ userInfo[Globals.DatabaseAvailabilityContext] != nil {
                 self.context = userInfo[Globals.DatabaseAvailabilityContext]
             } else {
                 logthis("userInfo or context received by notification is nil. Should never happen.")
             }
-        }
+        })
     }
     
     // MARK: Preparation
@@ -41,30 +41,30 @@ class AppNotificationManager: NotificationManagerDelegate {
         manager.prepareForNotificationsOfApplication(application, shouldRegisterForRemoteNotifications: shouldRegisterForRemoteNotifications, shouldRegisterForUserNotifications: shouldRegisterForUserNotifications)
     }
     
-    func prepared(token token: String) { // may be called multiple times
+    func prepared(token: String) { // may be called multiple times
         if manager.shouldRegisterForRemoteNotifications &&
             manager.shouldRegisterForUserNotifications &&
             NotificationManager.properties.registeredForUserNotifications &&
             NotificationManager.properties.registeredForRemoteSilentTypeNotifications {
-            UserDefaults.NotificationDeviceToken = token
+            GlobalUserDefaults.NotificationDeviceToken = token
         } else if manager.shouldRegisterForUserNotifications &&
             NotificationManager.properties.registeredForUserNotifications {
-            UserDefaults.NotificationDeviceToken = token
+            GlobalUserDefaults.NotificationDeviceToken = token
         }
     }
-    func handleRemoteNotificationWithUserInfo(userInfo: [NSObject: AnyObject], whenDone completion: ((UIBackgroundFetchResult)->Void)) {
-        let result: UIBackgroundFetchResult = .NoData
+    func handleRemoteNotificationWithUserInfo(_ userInfo: [AnyHashable: Any], whenDone completion: @escaping ((UIBackgroundFetchResult)->Void)) {
+        let result: UIBackgroundFetchResult = .noData
         completion(result)
     }
-    func handleLocalNotification(notification: UILocalNotification) {
+    func handleLocalNotification(_ notification: UILocalNotification) {
         if let _ = notification.userInfo, let body = notification.alertBody
         {
-            let alert = UIAlertController(title: notification.alertTitle ?? "new message", message: body, preferredStyle: .Alert)
-            alert.addAction(UIAlertAction(title: "OK", style: .Default, handler: {
+            let alert = UIAlertController(title: notification.alertTitle ?? "new message", message: body, preferredStyle: .alert)
+            alert.addAction(UIAlertAction(title: "OK", style: .default, handler: {
                 (action: UIAlertAction) in
-                    // Do something
+                // Do something
             }))
-            (UIApplication.sharedApplication().delegate as! AppDelegate).window?.rootViewController?.presentViewController(alert, animated: false, completion: nil)
+            (UIApplication.shared.delegate as! AppDelegate).window?.rootViewController?.present(alert, animated: false, completion: nil)
         }
     }
 }
@@ -127,7 +127,7 @@ class NotificationManager {
     }
     
     // MARK: remote notification preparation
-    
+ 
     /**
      This function prepares the application for receiving notifications.
      - Requires: a NotificationManager.sharedinstance.delegate object to return the result (token) to
