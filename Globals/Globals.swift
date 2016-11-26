@@ -1,9 +1,9 @@
 //
 //  Globals.swift
-//  Jeeves
+//
 //
 //  Created by Arjan on 04/04/16.
-//  Copyright © 2016 Auxilium. All rights reserved.
+//  Copyright © 2016. All rights reserved.
 //
 
 import UIKit

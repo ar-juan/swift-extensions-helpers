@@ -6,6 +6,7 @@
 //
 
 import UIKit
+import UserNotifications
 
 ///////////////////////////// Example implementation
 /*
@@ -104,7 +105,11 @@ class NotificationManager {
         static var deviceToken: Data?
         static var registeredForUserNotifications: Bool = false
         static var registeredForRemoteSilentTypeNotifications: Bool = false
-        static var iOS8AndHigherNotificationSettings: UIUserNotificationType = UIUserNotificationType.alert.union(UIUserNotificationType.badge).union(UIUserNotificationType.sound)
+        
+        @available(iOS 10.0, *)
+        static var iOS10AndHigherNotificationSettings: UNAuthorizationOptions = [.alert, .badge, .sound]
+        
+        static var iOS8And9NotificationSettings: UIUserNotificationType = UIUserNotificationType.alert.union(UIUserNotificationType.badge).union(UIUserNotificationType.sound)
         
         static var iOS7AndLowerNotificationSettings: UIRemoteNotificationType = UIRemoteNotificationType.alert.union(UIRemoteNotificationType.badge.union(UIRemoteNotificationType.sound))
         
@@ -143,16 +148,26 @@ class NotificationManager {
             self.shouldRegisterForUserNotifications = true
         }
         
-        // breekt in xcode 8 / swift 3 / iOS 10
+        
+        if #available(iOS 10.0, *) {
+            // in ios 10, UNUserNotifications are introduced
+            let center = UNUserNotificationCenter.current()
+            
+            center.requestAuthorization(options: properties.iOS10AndHigherNotificationSettings) { (granted, error) in
+                // actions based on whether notifications were authorized or not
+            }
+            application.registerForRemoteNotifications()
+        }
+        // onderstaande breekt in xcode 8 / swift 3 / iOS 10r
         //if application.responds(to: #selector(UIApplication.registerForRemoteNotifications)) { // iOS 8+
-        if #available(iOS 8.0, *) {
+        else if #available(iOS 8.0, *) {
             // in case of ios 8, besides registerForRemoteNotifications, also request
             // permission for remote and local user notifs (UI-based)
             // which has its own callback method didRegisterUserNotificationSettings,
             // so we save the deviceToken until the callback
             if shouldRegisterForUserNotifications {
                 if application.responds(to: #selector(UIApplication.registerUserNotificationSettings(_:))) { //iOS 8+
-                    let settings = UIUserNotificationSettings(types: properties.iOS8AndHigherNotificationSettings, categories: nil)
+                    let settings = UIUserNotificationSettings(types: properties.iOS8And9NotificationSettings, categories: nil)
                     application.registerUserNotificationSettings(settings)
                     // If you do not call this method, the system delivers all remote notifications to your app silently.
                 }
