@@ -1,6 +1,6 @@
 //
 //  LocationHelper.swift
-//  Jeeves
+//  
 //
 //  Created by Arjan on 15/04/16.
 //

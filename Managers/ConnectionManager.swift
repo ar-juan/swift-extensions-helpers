@@ -178,8 +178,10 @@ private class ConnectionManager {
             request.timeoutInterval = 60
             
             let task: URLSessionDataTask = session.dataTask(with: request as URLRequest, completionHandler: { (data: Data?, response: URLResponse?, error: Error?) -> Void in
+                //var errorns = error as! NSError
+                //print(errorns)
                 completionHandler(data, response, error)
-                
+
                 application.endBackgroundTask(bgTask!)
                 bgTask = UIBackgroundTaskInvalid;
             })

@@ -1,9 +1,8 @@
 //
 //  NSAttributedString+FromHtml.swift
-//  Jeeves
 //
 //  Created by Arjan on 17/05/16.
-//  Copyright © 2016 Auxilium. All rights reserved.
+//  Copyright © 2016. All rights reserved.
 //
 
 import UIKit

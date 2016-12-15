@@ -1,9 +1,8 @@
 //
 //  NSDate+Extensions.swift
-//  Jeeves
 //
 //  Created by Arjan on 20/05/16.
-//  Copyright © 2016 Auxilium. All rights reserved.
+//  Copyright © 2016. All rights reserved.
 //
 
 import Foundation

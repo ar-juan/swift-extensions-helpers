@@ -1,9 +1,9 @@
 //
 //  UserDefaults.swift
-//  Jeeves
+//  
 //
 //  Created by Arjan on 04/04/16.
-//  Copyright © 2016 Auxilium. All rights reserved.
+//  Copyright © 2016. All rights reserved.
 //
 
 import UIKit
@@ -29,17 +29,11 @@ struct GlobalUserDefaults {
         set(token) {
             defaults.set(token, forKey: NotificationDeviceTokenKey)
             if token != nil && token != "" {
+                print("new push token: \(token!)")
                 NotificationCenter.default.post(name: Notification.Name(rawValue: NotificationDeviceTokenSetNotificationName), object: nil)
             }
         }
     }
-    
-    
-    
-
-    
-    
-    
 }
 //
 //

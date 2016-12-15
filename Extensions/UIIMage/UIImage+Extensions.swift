@@ -1,6 +1,6 @@
 //
 //  UIImage+Extensions.swift
-//  Bonje
+//  
 //
 //  Created by Arjan van der Laan on 12/07/16.
 //  Copyright © 2016 Arjan van der Laan. All rights reserved.
