@@ -214,7 +214,7 @@ class AppConnectionManager {
     fileprivate init() {}
     fileprivate let maxAttempts = 3
     fileprivate let maxResponseBodySizeForLog = 200
-    fileprivate let logMuch: Bool = false
+    var logMuch: Bool = false
     
     func logResult(_ result: String, forUrlString urlString: String, session: URLSession, responseData: Data?, httpResponse: HTTPURLResponse, request: URLRequest?, error: Error?) {
         logResult(result, forUrlString: urlString, session: session, responseData: responseData, httpResponse: httpResponse, request: request, error: error as? NSError)

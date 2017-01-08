@@ -29,7 +29,7 @@ struct GlobalUserDefaults {
         set(token) {
             defaults.set(token, forKey: NotificationDeviceTokenKey)
             if token != nil && token != "" {
-                print("new push token: \(token!)")
+                print("\n new push token: \(token!) \n")
                 NotificationCenter.default.post(name: Notification.Name(rawValue: NotificationDeviceTokenSetNotificationName), object: nil)
             }
         }
