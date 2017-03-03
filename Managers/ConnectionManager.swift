@@ -225,7 +225,11 @@ class AppConnectionManager {
             let NSURLSessionHeaders = session.configuration.httpAdditionalHeaders
             let responseBodyString = (responseData != nil ? String(data: responseData!, encoding: String.Encoding.utf8) : "repsonseData = nil")!
             let requestBodyString = request?.httpBody != nil ? String(data: request!.httpBody!, encoding: String.Encoding.utf8) : "requstData = nil"
-            let shortResponseBodyString = responseBodyString.substring(to: responseBodyString.characters.index(responseBodyString.startIndex, offsetBy: self.maxResponseBodySizeForLog, limitedBy: responseBodyString.endIndex)!)
+            var shortResponseBodyString = "no shortResponseBodyString"
+            if let endIndex = responseBodyString.characters.index(responseBodyString.startIndex, offsetBy: self.maxResponseBodySizeForLog, limitedBy: responseBodyString.endIndex) {
+                shortResponseBodyString = responseBodyString.substring(to: endIndex)
+            }
+            
             
 //            let get = "\(result) for url: \(urlString) \r\nsessionHeaders: \(NSURLSessionHeaders) \r\nrequest headers: \(request?.allHTTPHeaderFields) \r\nrequest body: \(requestBodyString) \r\nresponse status code: \(httpResponse.statusCode) \r\nresponse headers: \(httpResponse.allHeaderFields) \r\nresponse body (first \(maxResponseBodySizeForLog) chars): \(shortResponseBodyString)"
             
