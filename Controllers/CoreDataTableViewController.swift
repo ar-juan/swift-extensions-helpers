@@ -125,7 +125,9 @@ class CoreDataTableViewController: UITableViewController, NSFetchedResultsContro
             // Which gives error: Attempt to create two animations for cell with userInfo (null)
             // similar to stackoverflow.com/questions/31383760/ which has more solutions
             if indexPath != newIndexPath {
-                tableView.moveRow(at: indexPath!, to: newIndexPath!)
+                //tableView.moveRow(at: indexPath!, to: newIndexPath!) geeft problemen op iOS 10
+                tableView.deleteRows(at: [indexPath!], with: .fade)
+                tableView.insertRows(at: [newIndexPath!], with: .fade)
             }
         }
     }
