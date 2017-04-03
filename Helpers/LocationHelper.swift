@@ -20,7 +20,7 @@ struct LocationHelper {
         directions.calculateETA { (response: MKETAResponse?, error: Error?) in
             if error != nil {
                 logthis("directions error: \(error?.localizedDescription)")
-                completion("Onbekend")
+                completion("onbekend ")
             } else {
                 
                 if let expectedTravelTime = response?.expectedTravelTime {
