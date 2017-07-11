@@ -334,6 +334,10 @@ class AppConnectionManager {
         ConnectionManager.sharedConnectionManager.postData(postData, toURLString: urlString, usingSession: session) { (responseData: Data?, response: URLResponse?, error: Error?, request: NSMutableURLRequest?) -> Void in
             guard let httpResponse = response as? HTTPURLResponse else {
                 logthis("response is nil")
+                if error != nil {
+                    print("error in function: postAppData(_:toURLString:postType:onSuccess:onError:attemptNumber:)")
+                    logthis("\(error?.localizedDescription ?? "no localized description")")
+                }
                 errorHandler?(0)
                 UIApplication.shared.isNetworkActivityIndicatorVisible = false
                 return
