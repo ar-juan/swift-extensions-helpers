@@ -19,7 +19,7 @@ struct LocationHelper {
         let directions = MKDirections(request: directionsRequest)
         directions.calculateETA { (response: MKETAResponse?, error: Error?) in
             if error != nil {
-                logthis("directions error: \(error?.localizedDescription)")
+                logthis("directions error: \(String(describing: error?.localizedDescription))")
                 completion("Onbekend")
             } else {
                 

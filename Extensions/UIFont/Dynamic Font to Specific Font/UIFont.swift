@@ -96,6 +96,6 @@ extension UIFont {
     }
     
     var styleAttribute: String? {
-        return fontDescriptor.fontAttributes[UIFontDescriptorTextStyleAttribute] as! String?
+        return fontDescriptor.fontAttributes[UIFontDescriptor.AttributeName.textStyle] as! String?
     }
 }

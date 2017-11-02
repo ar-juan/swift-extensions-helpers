@@ -124,7 +124,7 @@ class TwoOptionsQuestionView: UIView {
         }
     }
     
-    func optionChosen(_ sender: UIButton) {
+    @objc func optionChosen(_ sender: UIButton) {
         delegate?.choseOptionWithTitle(sender.currentTitle, ofTwoOptionsQuestionView: self)
         selectOptionWithTitle(sender.currentTitle)
     }
@@ -168,7 +168,7 @@ class TwoOptionsQuestionView: UIView {
         detailDisclosureButton.translatesAutoresizingMaskIntoConstraints = false
     }
     
-    func touchedDetailDisclosureButton(_ sender: UIButton) {
+    @objc func touchedDetailDisclosureButton(_ sender: UIButton) {
         delegate?.touchedDetailDisclosureButtonOfTwoOptionsQuestionView(self)
     }
     

@@ -101,7 +101,7 @@ private class ConnectionManager {
         var bgTask: UIBackgroundTaskIdentifier?
         
         let application = UIApplication.shared
-        bgTask = application.beginBackgroundTask(withName: "\(Bundle.main.bundleIdentifier).PostData", expirationHandler: { () -> Void in
+            bgTask = application.beginBackgroundTask(withName: "\(String(describing: Bundle.main.bundleIdentifier)).PostData", expirationHandler: { () -> Void in
             // Clean up any unfinished task business by marking where you
             // stopped or ending the task outright.
             application.endBackgroundTask(bgTask!)
@@ -162,7 +162,7 @@ private class ConnectionManager {
         var bgTask: UIBackgroundTaskIdentifier?
         
         let application = UIApplication.shared
-        bgTask = application.beginBackgroundTask(withName: "\(Bundle.main.bundleIdentifier).GetData", expirationHandler: { () -> Void in
+            bgTask = application.beginBackgroundTask(withName: "\(String(describing: Bundle.main.bundleIdentifier)).GetData", expirationHandler: { () -> Void in
             // Clean up any unfinished task business by marking where you
             // stopped or ending the task outright.
             application.endBackgroundTask(bgTask!)
@@ -217,7 +217,7 @@ class AppConnectionManager {
     var logMuch: Bool = false
     
     func logResult(_ result: String, forUrlString urlString: String, session: URLSession, responseData: Data?, httpResponse: HTTPURLResponse, request: URLRequest?, error: Error?) {
-        logResult(result, forUrlString: urlString, session: session, responseData: responseData, httpResponse: httpResponse, request: request, error: error as? NSError)
+        logResult(result, forUrlString: urlString, session: session, responseData: responseData, httpResponse: httpResponse, request: request, error: error as NSError?)
     }
     func logResult(_ result: String, forUrlString urlString: String, session: URLSession, responseData: Data?, httpResponse: HTTPURLResponse, request: URLRequest?, error: NSError?) {
         
@@ -227,7 +227,8 @@ class AppConnectionManager {
             let requestBodyString = request?.httpBody != nil ? String(data: request!.httpBody!, encoding: String.Encoding.utf8) : "requstData = nil"
             var shortResponseBodyString = "no shortResponseBodyString"
             if let endIndex = responseBodyString.characters.index(responseBodyString.startIndex, offsetBy: self.maxResponseBodySizeForLog, limitedBy: responseBodyString.endIndex) {
-                shortResponseBodyString = responseBodyString.substring(to: endIndex)
+                shortResponseBodyString = String(responseBodyString[..<endIndex])
+                //shortResponseBodyString = responseBodyString.substring(to: endIndex)
             }
             
             
@@ -235,11 +236,11 @@ class AppConnectionManager {
             
             var logItems = [
                 "\(result) for url \(urlString)", /* e.g. get error for url www.nu.nl */
-                "sessionHeaders: \(NSURLSessionHeaders)"]
+                "sessionHeaders: \(String(describing: NSURLSessionHeaders))"]
             
             if request != nil {
-                logItems.append("request headers: \(request!.allHTTPHeaderFields)")
-                logItems.append("request body: \(requestBodyString)")
+                logItems.append("request headers: \(String(describing: request!.allHTTPHeaderFields))")
+                logItems.append("request body: \(String(describing: requestBodyString))")
             }
             
             logItems += [
@@ -251,7 +252,7 @@ class AppConnectionManager {
                 logItems += [
                 "drror: \(error.code) - \(error.domain)",
                 "description: \(error.localizedDescription)",
-                "failure reason: \(error.localizedFailureReason)",
+                    "failure reason: \(String(describing: error.localizedFailureReason))",
                 "user info: \(error.userInfo)"]
             }
             
@@ -273,13 +274,17 @@ class AppConnectionManager {
             return
         }
         // Implement... if then else etc
-        UIApplication.shared.isNetworkActivityIndicatorVisible = true
+        DispatchQueue.main.async {
+            UIApplication.shared.isNetworkActivityIndicatorVisible = true
+        }
         let session = ConnectionManager.ephemeralURLSession // connectionManager.ephemeralURLSession
         connectionManager.getDatawithURLString(urlString, usingSession: session) { (responseData: Data?, response: URLResponse?, error: Error?) -> Void in
             guard let httpResponse = response as? HTTPURLResponse else {
                 logthis("response is nil")
                 errorHandler?(0)
-                UIApplication.shared.isNetworkActivityIndicatorVisible = false
+                DispatchQueue.main.async {
+                    UIApplication.shared.isNetworkActivityIndicatorVisible = false
+                }
                 return
             }
             
@@ -304,7 +309,7 @@ class AppConnectionManager {
                     failureText = "Forbidden"
                     errorHandler?(statusCode)
                 } else if error != nil {
-                    if (error as? NSError)?.code == URLError.timedOut.rawValue {
+                    if (error as NSError?)?.code == URLError.timedOut.rawValue {
                         self.logResult("time out", forUrlString: urlString, session: session, responseData: responseData, httpResponse: httpResponse, request: nil, error: error)
                     } else {
                         self.logResult("get error", forUrlString: urlString, session: session, responseData: responseData, httpResponse: httpResponse, request: nil, error: error)
@@ -317,7 +322,9 @@ class AppConnectionManager {
                 }
                 logthis("Extra information: \r\n\(failureText)")
             }
-            UIApplication.shared.isNetworkActivityIndicatorVisible = false
+            DispatchQueue.main.async {
+                UIApplication.shared.isNetworkActivityIndicatorVisible = false
+            }
         }
     }
     
@@ -329,13 +336,17 @@ class AppConnectionManager {
         }
         // if no application token, get token etc
         // same for session token
-        UIApplication.shared.isNetworkActivityIndicatorVisible = true
+        DispatchQueue.main.async {
+            UIApplication.shared.isNetworkActivityIndicatorVisible = true
+        }
         let session = ConnectionManager.urlSessionForType(.json)
         ConnectionManager.sharedConnectionManager.postData(postData, toURLString: urlString, usingSession: session) { (responseData: Data?, response: URLResponse?, error: Error?, request: NSMutableURLRequest?) -> Void in
             guard let httpResponse = response as? HTTPURLResponse else {
                 logthis("response is nil")
                 errorHandler?(0)
-                UIApplication.shared.isNetworkActivityIndicatorVisible = false
+                DispatchQueue.main.async {
+                    UIApplication.shared.isNetworkActivityIndicatorVisible = false
+                }
                 return
             }
             
@@ -363,10 +374,12 @@ class AppConnectionManager {
                     if error == nil { failureText = "No error but anyways something wrong in posting data" }
                     errorHandler?(statusCode)
                 }
-                self.logResult("posting error", forUrlString: urlString, session: session, responseData: responseData, httpResponse: httpResponse, request: request as URLRequest?, error: (error as? NSError))
+                self.logResult("posting error", forUrlString: urlString, session: session, responseData: responseData, httpResponse: httpResponse, request: request as URLRequest?, error: (error as NSError?))
                 logthis("extra information: \(failureText)")
             }
-            UIApplication.shared.isNetworkActivityIndicatorVisible = false
+            DispatchQueue.main.async {
+                UIApplication.shared.isNetworkActivityIndicatorVisible = false
+            }
         }
     }
     

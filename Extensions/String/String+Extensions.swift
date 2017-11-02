@@ -27,7 +27,8 @@ extension String {
         if self.characters.last == "/" {
             if path.characters.first == "/" {
                 firstPart = self
-                secondPart = path.substring(from: path.index(after: startIndex)) // path.substring(from: path.startIndex.advancedBy(1))
+                secondPart = String(path[path.index(after: startIndex)...]) // 1?
+                //secondPart = path.substring(from: path.index(after: startIndex)) // path.substring(from: path.startIndex.advancedBy(1))
             } else {
                 firstPart = self
                 secondPart = path

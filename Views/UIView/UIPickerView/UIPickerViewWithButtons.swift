@@ -39,11 +39,11 @@ class UIPickerViewWithButtons: UIPickerView {
         toolBar.isUserInteractionEnabled = true
     }
     
-    func cancelPicker() {
+    @objc func cancelPicker() {
         logthis("target-action of \(#function) not implemented")
     }
     
-    func donePicker() {
+    @objc func donePicker() {
         logthis("target-action of \(#function) not implemented")
     }
     

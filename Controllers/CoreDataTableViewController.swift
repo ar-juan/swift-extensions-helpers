@@ -43,9 +43,9 @@ class CoreDataTableViewController: UITableViewController, NSFetchedResultsContro
     // MARK: - Fetched results controller
     func performFetch() {
         if self.fetchedResultsController?.fetchRequest.predicate != nil {
-            if self.debug { print("\(String(describing: type(of: self))).\(#function) fetching \(self.fetchedResultsController?.fetchRequest.entityName) with predicate: \(self.fetchedResultsController?.fetchRequest.predicate)") }
+            if self.debug { print("\(String(describing: type(of: self))).\(#function) fetching \(String(describing: self.fetchedResultsController?.fetchRequest.entityName)) with predicate: \(String(describing: self.fetchedResultsController?.fetchRequest.predicate))") }
         } else {
-            if self.debug { print("\(String(describing: type(of: self))).\(#function) fetching all \(self.fetchedResultsController?.fetchRequest.entityName) (i.e. no predicate)") }
+            if self.debug { print("\(String(describing: type(of: self))).\(#function) fetching all \(String(describing: self.fetchedResultsController?.fetchRequest.entityName)) (i.e. no predicate)") }
         }
         do
         {
@@ -53,7 +53,7 @@ class CoreDataTableViewController: UITableViewController, NSFetchedResultsContro
         }
         catch let error as NSError {
             print("\(String(describing: type(of: self))).\(#function) performFetch: failed")
-            print("\(String(describing: type(of: self))).\(#function) \(error.localizedDescription) (\(error.localizedFailureReason))")
+            print("\(String(describing: type(of: self))).\(#function) \(error.localizedDescription) (\(String(describing: error.localizedFailureReason)))")
         }
         self.tableView.reloadData()
     }

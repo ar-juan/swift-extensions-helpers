@@ -36,8 +36,10 @@ struct LogHelper {
         
         let ellipsis = "..."
         if shortClassName.characters.count > (desiredClassNameLength) {
-            let beg = shortClassName.substring(to: shortClassName.characters.index(shortClassName.startIndex, offsetBy: desiredClassNameLength / 2 - ellipsis.characters.count))
-            let end = shortClassName.substring(from: shortClassName.characters.index(shortClassName.endIndex, offsetBy: -desiredClassNameLength / 2))
+            let beg = shortClassName[..<shortClassName.characters.index(shortClassName.startIndex, offsetBy: desiredClassNameLength / 2 - ellipsis.characters.count)]; // swift 4
+            //let beg = shortClassName.substring(to: shortClassName.characters.index(shortClassName.startIndex, offsetBy: desiredClassNameLength / 2 - ellipsis.characters.count)) // < swift 4
+            //let end = shortClassName.substring(from: shortClassName.characters.index(shortClassName.endIndex, offsetBy: -desiredClassNameLength / 2)) // < swift 4
+            let end = shortClassName[shortClassName.characters.index(shortClassName.endIndex, offsetBy: -desiredClassNameLength / 2)...]; // swift 4
             shortClassName = "\(beg)\(ellipsis)\(end)"
         }
         

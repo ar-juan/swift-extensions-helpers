@@ -40,7 +40,7 @@ extension NSManagedObject {
             }
             catch let error as NSError
             {
-                logthis("\(error.localizedDescription) (\(error.localizedFailureReason))")
+                logthis("\(error.localizedDescription) (\(String(describing: error.localizedFailureReason)))")
             }
         }
         return object
@@ -66,7 +66,7 @@ extension NSManagedObject {
             }
             catch let error as NSError
             {
-                logthis("\(error.localizedDescription) (\(error.localizedFailureReason))")
+                logthis("\(error.localizedDescription) (\(String(describing: error.localizedFailureReason)))")
             }
         }
         return object
@@ -97,7 +97,7 @@ extension NSManagedObject {
         }
         catch let error as NSError
         {
-            logthis("\(error.localizedDescription) (\(error.localizedFailureReason))")
+            logthis("\(error.localizedDescription) (\(String(describing: error.localizedFailureReason)))")
         }
         
         return nextNumber
