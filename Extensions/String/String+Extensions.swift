@@ -24,8 +24,8 @@ extension String {
         var firstPart: String
         var secondPart: String
         
-        if self.characters.last == "/" {
-            if path.characters.first == "/" {
+        if self.last == "/" {
+            if path.first == "/" {
                 firstPart = self
                 secondPart = String(path[path.index(after: startIndex)...]) // 1?
                 //secondPart = path.substring(from: path.index(after: startIndex)) // path.substring(from: path.startIndex.advancedBy(1))
@@ -34,7 +34,7 @@ extension String {
                 secondPart = path
             }
         } else {
-            if path.characters.first == "/" {
+            if path.first == "/" {
                 firstPart = self
                 secondPart = path
             } else {

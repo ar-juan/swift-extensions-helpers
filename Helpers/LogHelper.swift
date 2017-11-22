@@ -35,21 +35,21 @@ struct LogHelper {
         let desiredClassNameLength = 25
         
         let ellipsis = "..."
-        if shortClassName.characters.count > (desiredClassNameLength) {
-            let beg = shortClassName[..<shortClassName.characters.index(shortClassName.startIndex, offsetBy: desiredClassNameLength / 2 - ellipsis.characters.count)]; // swift 4
-            //let beg = shortClassName.substring(to: shortClassName.characters.index(shortClassName.startIndex, offsetBy: desiredClassNameLength / 2 - ellipsis.characters.count)) // < swift 4
-            //let end = shortClassName.substring(from: shortClassName.characters.index(shortClassName.endIndex, offsetBy: -desiredClassNameLength / 2)) // < swift 4
-            let end = shortClassName[shortClassName.characters.index(shortClassName.endIndex, offsetBy: -desiredClassNameLength / 2)...]; // swift 4
+        if shortClassName.count > (desiredClassNameLength) {
+            let beg = shortClassName[..<shortClassName.index(shortClassName.startIndex, offsetBy: desiredClassNameLength / 2 - ellipsis.count)]; // swift 4
+            //let beg = shortClassName.substring(to: shortClassName.index(shortClassName.startIndex, offsetBy: desiredClassNameLength / 2 - ellipsis.count)) // < swift 4
+            //let end = shortClassName.substring(from: shortClassName.index(shortClassName.endIndex, offsetBy: -desiredClassNameLength / 2)) // < swift 4
+            let end = shortClassName[shortClassName.index(shortClassName.endIndex, offsetBy: -desiredClassNameLength / 2)...]; // swift 4
             shortClassName = "\(beg)\(ellipsis)\(end)"
         }
         
-        var difference = desiredClassNameLength - shortClassName.characters.count
+        var difference = desiredClassNameLength - shortClassName.count
         while difference > 0 {
             shortClassName.append(" " as Character)
             difference -= 1
         }
         
-        difference = minLineNumberLength - lineStr.characters.count
+        difference = minLineNumberLength - lineStr.count
         while difference > 0 {
             lineStr.append(" " as Character)
             difference -= 1

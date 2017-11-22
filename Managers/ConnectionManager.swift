@@ -226,7 +226,7 @@ class AppConnectionManager {
             let responseBodyString = (responseData != nil ? String(data: responseData!, encoding: String.Encoding.utf8) : "repsonseData = nil")!
             let requestBodyString = request?.httpBody != nil ? String(data: request!.httpBody!, encoding: String.Encoding.utf8) : "requstData = nil"
             var shortResponseBodyString = "no shortResponseBodyString"
-            if let endIndex = responseBodyString.characters.index(responseBodyString.startIndex, offsetBy: self.maxResponseBodySizeForLog, limitedBy: responseBodyString.endIndex) {
+            if let endIndex = responseBodyString.index(responseBodyString.startIndex, offsetBy: self.maxResponseBodySizeForLog, limitedBy: responseBodyString.endIndex) {
                 shortResponseBodyString = String(responseBodyString[..<endIndex])
                 //shortResponseBodyString = responseBodyString.substring(to: endIndex)
             }
