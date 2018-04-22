@@ -343,7 +343,7 @@ class NotificationManager {
             // so we can nillify it, preventing it from being called more than once
             properties.didReceiveRemoteNotificationFetchCompletionHandler = nil
             
-            print("calling completionhandler didReceiveRemoteNotificationFetch")
+            logthis("Calling completionhandler didReceiveRemoteNotificationFetch...")
             completionHandler(result)
         }
     }
@@ -383,7 +383,7 @@ class NotificationManager {
     
     
     func application(_ application: UIApplication, didReceiveRemoteNotification userInfo: [AnyHashable: Any], fetchCompletionHandler completionHandler: @escaping (UIBackgroundFetchResult) -> Void) {
-        logthis(String(describing: application.applicationState));
+        logthis("\(application.applicationState)")
         
         // Save the completionhandler. This way we have enough time to start live tracking and then
         // call the completionhandler when we're pretty sure everything is up and running

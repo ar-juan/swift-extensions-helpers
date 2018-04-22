@@ -30,7 +30,7 @@ struct LogHelper {
         let toArray = fileName.components(separatedBy: ".")
         let className = toArray.first ?? ""
         var shortClassName = className.replacingOccurrences(of: "ViewController", with: "VC")
-       
+        shortClassName = shortClassName.replacingOccurrences(of: "Manager", with: "Mgr")
         let minLineNumberLength = 6
         let desiredClassNameLength = 25
         
