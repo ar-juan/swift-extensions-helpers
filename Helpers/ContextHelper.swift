@@ -2,6 +2,7 @@
 //  ContextHelper.swift
 //
 //  Created by Arjan van der Laan on 05/02/16.
+//  Usage is free for everyone, but no one can claim ownership.
 //
 
 import Foundation
