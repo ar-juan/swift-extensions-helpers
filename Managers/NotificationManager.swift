@@ -3,13 +3,15 @@
 //  App
 //
 //  Created by Arjan on 28/04/16.
-//
+// Expects iOS 10+
 
 import UIKit
 import UserNotifications
 
 ///////////////////////////// Example implementation
 /*
+ import UIKit
+ import UserNotifications
 /**
  This app specific notification manager should be used as the central point for
  - registering the app for receiving notifications, both UI based and remote push notifications
@@ -18,20 +20,10 @@ import UserNotifications
  */
 class AppNotificationManager: NotificationManagerDelegate {
     static let sharedInstance = AppNotificationManager()
-    let manager = NotificationManager.sharedInstance
-    var context: NSManagedObjectContext?
+    let manager = NotificationManager.sharedInstance()
     
     private init() {
         manager.delegate = self
-        
-        // If we are called BEFORE context has been set
-        NotificationCenter.default.addObserver(forName: NSNotification.Name(Globals.DatabaseAvailabilityNotificationName), object: nil, queue: nil, using: { (notification) -> Void in
-            if let userInfo = notification.userInfo as? [String: NSManagedObjectContext], /* where */ userInfo[Globals.DatabaseAvailabilityContext] != nil {
-                self.context = userInfo[Globals.DatabaseAvailabilityContext]
-            } else {
-                logthis("userInfo or context received by notification is nil. Should never happen.")
-            }
-        })
     }
     
     // MARK: Preparation
@@ -47,33 +39,32 @@ class AppNotificationManager: NotificationManagerDelegate {
             manager.shouldRegisterForUserNotifications &&
             NotificationManager.properties.registeredForUserNotifications &&
             NotificationManager.properties.registeredForRemoteSilentTypeNotifications {
-            GlobalUserDefaults.NotificationDeviceToken = token
+            Storage.pushIdentifier = token
         } else if manager.shouldRegisterForUserNotifications &&
             NotificationManager.properties.registeredForUserNotifications {
-            GlobalUserDefaults.NotificationDeviceToken = token
+            Storage.pushIdentifier = token
         }
     }
-    func handleRemoteNotificationWithUserInfo(_ userInfo: [AnyHashable: Any], whenDone completion: @escaping ((UIBackgroundFetchResult)->Void)) {
+    
+    func handleRemoteNotificationWithUserInfo(_ userInfo: [AnyHashable : Any], whenDone completion: @escaping ((UIBackgroundFetchResult) -> Void)) {
         let result: UIBackgroundFetchResult = .noData
         completion(result)
     }
-    func handleLocalNotification(_ notification: UILocalNotification) {
-        if let _ = notification.userInfo, let body = notification.alertBody
-        {
-            let alert = UIAlertController(title: notification.alertTitle ?? "new message", message: body, preferredStyle: .alert)
-            alert.addAction(UIAlertAction(title: "OK", style: .default, handler: {
-                (action: UIAlertAction) in
-                // Do something
-            }))
-            (UIApplication.shared.delegate as! AppDelegate).window?.rootViewController?.present(alert, animated: false, completion: nil)
-        }
+    
+    func handleLocalNotification(_ notification: UNNotification) {
+        let alert = UIAlertController(title: notification.request.content.title, message: notification.request.content.body, preferredStyle: .alert)
+        alert.addAction(UIAlertAction(title: "OK", style: .default, handler: {
+            (action: UIAlertAction) in
+            // Do something
+        }))
+        (UIApplication.shared.delegate as! AppDelegate).window?.rootViewController?.present(alert, animated: false, completion: nil)
     }
 }
 */
 
 protocol NotificationManagerDelegate {
     /**
-     This function is called when there is a tokenstring available. iOS 7 & 8 register for notifications in a different way, which may cause this method to be called twice. Second, if for one reason the app gets a new token, this will be called again. Hence therre needs to be a delegate troughout the lifetime of the `NotificationManager`.
+     This function is called when there is a tokenstring available. If for one reason the app gets a new token, this will be called again. There needs to be a delegate troughout the lifetime of the `NotificationManager`.
      
      - parameter token: The notification token / identification of this specific app on this specific device
      */
@@ -90,14 +81,18 @@ protocol NotificationManagerDelegate {
      This method is called when a local (user) notification has been received by the device. The delegate needs to handle this local notification.
      `notification.userInfo` contains the data related to this `notification`
      */
-    func handleLocalNotification(_ notification: UILocalNotification)
+    func handleLocalNotification(_ notification: UNNotification)
 }
-class NotificationManager {
-    static let sharedInstance = NotificationManager() // Singleton pattern
-    fileprivate init() {} // prevents others from using the default '()' initializer for this class.
+@objc class NotificationManager: NSObject, UNUserNotificationCenterDelegate {
+    // like this the sharedInstance class method can be reached from ObjC.
+    class func sharedInstance() -> NotificationManager {
+        return NotificationManager._sharedInstance
+    }
+    static let _sharedInstance = NotificationManager() // Singleton pattern
+    private override init() {} // prevents others from using the default '()' initializer for this class.
     var delegate: NotificationManagerDelegate?
     static let completionHandlerTimeout: TimeInterval = 10 // seconds
-
+    
     var shouldRegisterForRemoteNotifications = true
     var shouldRegisterForUserNotifications = true
     
@@ -106,12 +101,7 @@ class NotificationManager {
         static var registeredForUserNotifications: Bool = false
         static var registeredForRemoteSilentTypeNotifications: Bool = false
         
-        @available(iOS 10.0, *)
-        static var iOS10AndHigherNotificationSettings: UNAuthorizationOptions = [.alert, .badge, .sound]
-        
-        static var iOS8And9NotificationSettings: UIUserNotificationType = UIUserNotificationType.alert.union(UIUserNotificationType.badge).union(UIUserNotificationType.sound)
-        
-        static var iOS7AndLowerNotificationSettings: UIRemoteNotificationType = UIRemoteNotificationType.alert.union(UIRemoteNotificationType.badge.union(UIRemoteNotificationType.sound))
+        static var notificationSettings: UNAuthorizationOptions = [.alert, .badge, .sound]
         
         /**
          If we get a remote notification, we have a short time to do stuff, and then we have to call the completion handler.
@@ -134,7 +124,7 @@ class NotificationManager {
     }
     
     // MARK: remote notification preparation
- 
+    
     /**
      This function prepares the application for receiving notifications.
      - Requires: a NotificationManager.sharedinstance.delegate object to return the result (token) to
@@ -147,73 +137,63 @@ class NotificationManager {
         self.shouldRegisterForRemoteNotifications = shouldRegisterForRemoteNotifications
         self.shouldRegisterForUserNotifications = shouldRegisterForUserNotifications
         if shouldRegisterForRemoteNotifications {
-            self.shouldRegisterForUserNotifications = true
+            self.shouldRegisterForUserNotifications = true // as well
         }
         
-        
-        if #available(iOS 10.0, *) {
-            // in ios 10, UNUserNotifications are introduced
-            if shouldRegisterForUserNotifications {
-                let center = UNUserNotificationCenter.current()
-                
-                center.requestAuthorization(options: properties.iOS10AndHigherNotificationSettings) { (granted, error) in
-                    // actions based on whether notifications were authorized or not
-                    if granted && error == nil {
-                    }
-                    center.getNotificationSettings(completionHandler: { (unSettings: UNNotificationSettings) in
-                        
-                        var allowedTypes = UIUserNotificationType()
-                        
-                        if properties.iOS10AndHigherNotificationSettings.contains(.badge) && unSettings.badgeSetting == .enabled { allowedTypes.insert(.badge) }
-                        if properties.iOS10AndHigherNotificationSettings.contains(.sound) && unSettings.soundSetting == .enabled { allowedTypes.insert(.sound) }
-                        if properties.iOS10AndHigherNotificationSettings.contains(.alert) && unSettings.alertSetting == .enabled { allowedTypes.insert(.alert) }
-                        
-                        let settings = UIUserNotificationSettings(types: allowedTypes, categories: nil)
-                        self.application(application, didRegisterUserNotificationSettings: settings)
-                    })
-                }
-            }
-            if shouldRegisterForRemoteNotifications {
-                application.registerForRemoteNotifications()
-            }
-        }
-        // onderstaande breekt in xcode 8 / swift 3 / iOS 10r
-        //if application.responds(to: #selector(UIApplication.registerForRemoteNotifications)) { // iOS 8+
-        else if #available(iOS 8.0, *) {
-            // in case of ios 8, besides registerForRemoteNotifications, also request
-            // permission for remote and local user notifs (UI-based)
-            // which has its own callback method didRegisterUserNotificationSettings,
-            // so we save the deviceToken until the callback
-            if shouldRegisterForUserNotifications {
-                if application.responds(to: #selector(UIApplication.registerUserNotificationSettings(_:))) { //iOS 8+
-                    let settings = UIUserNotificationSettings(types: properties.iOS8And9NotificationSettings, categories: nil)
-                    application.registerUserNotificationSettings(settings)
-                    // If you do not call this method, the system delivers all remote notifications to your app silently.
-                }
-            }
+        if shouldRegisterForUserNotifications {
+            let center = UNUserNotificationCenter.current()
+            center.delegate = self
             
-            // from ios 8, remote silent notifs and remote and local user notifs are seperated.
-            // remote silent notifs are enabled by default (as long as your app has the Capability)
-            // and you called registerForRemoteNotifications once
-            // (although it can still be disabled in the settings)
-            // you still need to call below code though, to get the token
-            if shouldRegisterForRemoteNotifications {
-                application.registerForRemoteNotifications()
-            }
-            // this either calls didRegistForRemoteNotificationsWithDeviceToken:, or
-            // or calls didFailToRegisterForRemoteNotificationsWithError:
-            /* in ios 8: If you want your app’s remote (and local) notifications to
-             display alerts, play sounds, or perform other user-facing actions, you must
-             call the registerUserNotificationSettings: method to request the types of
-             notifications you want to use. If you do not call that method, the system
-             delivers all remote notifications to your app silently. */
-        } else { // iOS 7
-            // In ios 7, remote silent and user notifs are handled the same way in terms of permission
-            if shouldRegisterForUserNotifications || shouldRegisterForRemoteNotifications {
-                let types: UIRemoteNotificationType = properties.iOS7AndLowerNotificationSettings
-                application.registerForRemoteNotifications(matching: types)
+            center.requestAuthorization(options: properties.notificationSettings) { (granted, error) in
+                guard error == nil else {
+                    print("UNUserNotificationCenter requestAuthorization error: \(error!.localizedDescription)")
+                    return
+                }
+                
+                center.getNotificationSettings(completionHandler: { (unSettings: UNNotificationSettings) in
+                    
+                    var allowedTypes = UNAuthorizationOptions()
+                    
+                    if properties.notificationSettings.contains(.badge) && unSettings.badgeSetting == .enabled { allowedTypes.insert(.badge) }
+                    if properties.notificationSettings.contains(.sound) && unSettings.soundSetting == .enabled { allowedTypes.insert(.sound) }
+                    if properties.notificationSettings.contains(.alert) && unSettings.alertSetting == .enabled { allowedTypes.insert(.alert) }
+                    
+                    
+                    /*
+                     There's 2 typs of remote notification:
+                     User Notifs: APN server sending aps {alert: {...} } resulting in the user notification being presented to the user
+                     Silent type Notifs: APNs server sending push notif with the content-available flag in it: aps { content-available: 1 }
+                     instead of providing a user interface notif,
+                     */
+                    
+                    properties.registeredForUserNotifications = true
+                    if properties.deviceToken != nil, let tokenString: String = String(data: properties.deviceToken!, encoding: .utf8) /*?.hexString*/ {
+                        self.delegate?.prepared(token: tokenString)
+                        if self.delegate == nil {
+                            print("Did you forget to set the delegate of the NotificationManager (see example implementation on top of file)?")
+                        }
+                    } else {
+                        // there's no token yet. In case the user said NO, it will never come
+                    }
+                    
+                    if shouldRegisterForRemoteNotifications {
+                        DispatchQueue.main.async {
+                            application.registerForRemoteNotifications()
+                        }
+                    }
+                    
+                    //if !allowedTypes.contains(UIUserNotificationType.Alert) { doSomething }
+                    // kan geimplementeerd worden als bijv. delegate?.whatToDoWithAllowedTypes(allowedTypes: allowedTypes)
+                })
             }
         }
+        
+    }
+    
+    
+    
+    func userNotificationCenter(_ center: UNUserNotificationCenter, openSettingsFor notification: UNNotification?) {
+        //
     }
     
     
@@ -234,34 +214,13 @@ class NotificationManager {
      */
     // remote AND local
     // iOS 8+
-    func application(_ application: UIApplication, didRegisterUserNotificationSettings notificationSettings: UIUserNotificationSettings) { // ONLY iOS 8+
-        properties.registeredForUserNotifications = true
-        if let tokenString: String = properties.deviceToken?.hexString {
-            delegate?.prepared(token: tokenString)
-            if delegate == nil {
-                logthis("Did you forget to set the delegate of the NotificationManager (see example implementation on top of file)?")
-            }
-        } else {
-            // there's no token yet. In case the user said NO, it will never come
-        }
+    func application(_ application: UIApplication, didRegisterUserNotificationSettings notificationSettings: UNNotificationSettings) {
         
-        // User has allowed receiving the following types:
-        //let allowedTypes: UIUserNotificationType = notificationSettings.types
-        
-        //if !allowedTypes.contains(UIUserNotificationType.Alert) { doSomething }
-        // kan geimplementeerd worden als bijv. delegate?.whatToDoWithAllowedTypes(allowedTypes: allowedTypes)
-    }
-    func application(_ application: UIApplication, handleActionWithIdentifier identifier: String?, forLocalNotification notification: UILocalNotification, completionHandler: () -> Void) { // ONLY iOS 8+
-        // identifier: you can use this to determine what action was tapped on
-        // e.g. if (identifier isEqualToString:@"ACCEPT_IDENTIFIER"): [self handleAcceptNotif];
-    }
-    func application(_ application: UIApplication, handleActionWithIdentifier identifier: String?, forRemoteNotification userInfo: [AnyHashable: Any], completionHandler: () -> Void) { // ONLY iOS 8+
-        // idem maar voor remote notifs
     }
     
-    // iOS 7+
-    func application(_ application: UIApplication, didRegisterForRemoteNotificationsWithDeviceToken deviceToken: Data) { // iOS 7 also (maybe even lower)
-        // Meaning in ios 7: registered for requested types of remote user AND silent types notifications
+    
+    //
+    func application(_ application: UIApplication, didRegisterForRemoteNotificationsWithDeviceToken deviceToken: Data) {
         // Meaning in ios 8+: registered only for remote silent type notifications.
         
         // note that the delegate method may be called any time the device token changes,
@@ -272,48 +231,41 @@ class NotificationManager {
         // Set property for later use
         properties.registeredForRemoteSilentTypeNotifications = true
         
-        // in ios 7 there is no distinction between silent type and user notifs, so we can set the token and we're done
-        if UIDevice.current.iOSVersion >= 7 && UIDevice.current.iOSVersion < 8 {
-            properties.registeredForUserNotifications = true
-            if let tokenString: String = properties.deviceToken?.hexString {
-                delegate?.prepared(token: tokenString)
-                if delegate == nil {
-                    logthis("Did you forget to set the delegate of the NotificationManager (see example implementation on top of file)?")
-                }
-            }
-        } else {
-            // in case of ios 8, we also request permission for (remote and local) user notifs (UI-based)
-            // which has its own callback method didRegisterUserNotificationSettings,
-            // so we save the deviceToken until the callback unless we're past that stage already
+        // in case of ios 8, we also request permission for (remote and local) user notifs (UI-based)
+        // which has its own callback method didRegisterUserNotificationSettings,
+        // so we save the deviceToken until the callback unless we're past that stage already
+        
+        // so if didRegisterUserNotificationSettings was already called
+        if properties.registeredForUserNotifications == true {
+            // save the token to UserDefaults
             
-            // so if didRegisterUserNotificationSettings was already called
-            if properties.registeredForUserNotifications == true {
-                // save the token to UserDefaults
-                
-                let tokenString = deviceToken.hexString
-//                var tokenString = deviceToken.description.trimmingCharacters(in: CharacterSet(charactersIn: "<>"))
-//                tokenString = tokenString.replacingOccurrences(of: " ", with: "")
-                delegate?.prepared(token: tokenString )
-                if delegate == nil {
-                    logthis("Did you forget to set the delegate of the NotificationManager (see example implementation on top of file)?")
-                }
-                //UserDefaults.NotificationDeviceToken = tokenString
-            } else {
-                // didRegisterUserNotificationSettings still has to be called (but might never)
-                // so we save if for later
-                // TODO might never
-                properties.deviceToken = deviceToken;
+            let tokenParts = deviceToken.map { data -> String in
+                return String(format: "%02.2hhx", data)
             }
+            let token = tokenParts.joined()
+            print("Device Token: \(token)")
+            
+            delegate?.prepared(token: token)
+            if delegate == nil {
+                print("Did you forget to set the delegate of the NotificationManager (see example implementation on top of file)?")
+            }
+            //UserDefaults.NotificationDeviceToken = tokenString
+        } else {
+            // didRegisterUserNotificationSettings still has to be called (but might never)
+            // so we save if for later
+            // TODO might never
+            properties.deviceToken = deviceToken;
         }
+        
         /*
          Note:
          Token uniquely identifies device, but is not the same as UDID
          It may change: hence, call registration API on every launch, and dont depend on cached copy of it
          */
     }
+    
     func application(_ application: UIApplication, didFailToRegisterForRemoteNotificationsWithError error: Error) {
-        // Meaning in ios 7: registration for requested types of (remote) user AND silent types notifications failed.
-        // Meaning in ios 8: registration for remote silent type notifications failed.
+        // Meaning in ios 8-9: registration for remote silent type notifications failed.
         
         // Warning: this is not called if the user doesnt allow the app to deliver remote notifs!
         // In that case, didRegisterForRemoteNotificationsWithDeviceToken is simply not called
@@ -343,7 +295,7 @@ class NotificationManager {
             // so we can nillify it, preventing it from being called more than once
             properties.didReceiveRemoteNotificationFetchCompletionHandler = nil
             
-            logthis("Calling completionhandler didReceiveRemoteNotificationFetch...")
+            print("Calling completionhandler didReceiveRemoteNotificationFetch...")
             completionHandler(result)
         }
     }
@@ -363,38 +315,37 @@ class NotificationManager {
     }
     
     
-    // MARK: remote notification handling
-    func application(_ application: UIApplication, didReceiveLocalNotification notification: UILocalNotification) {
-    logthis();
+    // MARK: local notification handling
+    //Here you decide whether to silently handle the notification or still alert the user.
+    func userNotificationCenter(_ center: UNUserNotificationCenter, willPresent notification: UNNotification, withCompletionHandler completionHandler: @escaping (UNNotificationPresentationOptions) -> Void)
+    {
         delegate?.handleLocalNotification(notification)
         if delegate == nil {
-            logthis("Did you forget to set the delegate of the NotificationManager (see example implementation on top of file)?")
+            print("Did you forget to set the delegate of the NotificationManager (see example implementation on top of file)?")
         }
         
-        // example
-//        if let _ = notification.userInfo, let body = notification.alertBody
-//        {
-//            let alert = UIAlertController(title: "Nieuw bericht", message: body, preferredStyle: .Alert)
-//            alert.addAction(UIAlertAction(title: "OK", style: .Default, handler: nil))
-//            (UIApplication.sharedApplication().delegate as! AppDelegate).window?.rootViewController?.presentViewController(alert, animated: false, completion: nil)
-//            //self.window?.rootViewController?.presentViewController(alert, animated: false, completion: nil)
-//        }
+        //Write you app specific code here
+        completionHandler([.alert, .sound]) //execute the provided completion handler block with the delivery option (if any) that you want the system to use. If you do not specify any options, the system silences the notification.
+    }
+    func userNotificationCenter(_ center: UNUserNotificationCenter, didReceive response: UNNotificationResponse, withCompletionHandler completionHandler: @escaping () -> Void) {
+        // TODO implement
     }
     
     
+    // MARK: remote notification handling
     func application(_ application: UIApplication, didReceiveRemoteNotification userInfo: [AnyHashable: Any], fetchCompletionHandler completionHandler: @escaping (UIBackgroundFetchResult) -> Void) {
-        logthis("\(application.applicationState)")
+        print("\(application.applicationState)")
         
         // Save the completionhandler. This way we have enough time to start live tracking and then
         // call the completionhandler when we're pretty sure everything is up and running
         // or not gonna run at all (10 seconds?)
-        // We'll do this from the ARLiveTrackManager class!!!!!!!!!!!
+        
         properties.didReceiveRemoteNotificationFetchCompletionHandler = completionHandler
         delegate?.handleRemoteNotificationWithUserInfo(userInfo, whenDone: { (result: UIBackgroundFetchResult) in
             self.runDidReceiveRemoteNotificationFetchCompletionHandler(result)
         })
         if delegate == nil {
-            logthis("Did you forget to set the delegate of the NotificationManager (see example implementation on top of file)?")
+            print("Did you forget to set the delegate of the NotificationManager (see example implementation on top of file)?")
         }
         // Example of delegate implementation:
         // TODO
@@ -405,48 +356,53 @@ class NotificationManager {
          Also see: http://stackoverflow.com/questions/26959472/silent-push-notifications-only-delivered-if-device-is-charging-and-or-app-is-for
          */
         
-
+        
     }
     
     
     
     // Status methods
+    
+    /**
+     - note: if `allowed` is `nil`, it means the authorizationstatus is undetermined
+     */
     static func userNotificationsAllowed(callBack: @escaping ((_ allowed: Bool?) -> Void) ) {
-        let application = UIApplication.shared
-        //let enabled: Bool = false
-        
-        if #available(iOS 10.0, *) {
-            let center = UNUserNotificationCenter.current()
-            center.getNotificationSettings(completionHandler: { (unSettings: UNNotificationSettings) in
-                if unSettings.authorizationStatus == .notDetermined {
-                    callBack(nil) // not determined
-                }
-                
-                callBack(unSettings.authorizationStatus == .authorized && unSettings.alertSetting == .enabled && unSettings.badgeSetting == .enabled)
-            })
-        } else if application.responds(to: #selector(getter: UIApplication.isRegisteredForRemoteNotifications) ) { // iOS 8
-            let settings: UIUserNotificationSettings = application.currentUserNotificationSettings!
+        let center = UNUserNotificationCenter.current()
+        center.getNotificationSettings(completionHandler: { (unSettings: UNNotificationSettings) in
+            if unSettings.authorizationStatus == .notDetermined {
+                callBack(nil) // not determined
+            }
             
-            let enabled1 = application.isRegisteredForRemoteNotifications
-            let enabled2 = settings.types.contains(.alert)
-            let enabled3 = settings.types.contains(.badge)
-            
-            callBack(enabled1 && enabled2 && enabled3)
-            
-        } else {
-            let types: UIRemoteNotificationType = application.enabledRemoteNotificationTypes()
-            let alertsEnabled = types.contains(.alert)
-            let badgeEnabled = types.contains(.badge)
-            
-            callBack(alertsEnabled && badgeEnabled)
-        }
+            callBack(unSettings.authorizationStatus == .authorized && unSettings.alertSetting == .enabled && unSettings.badgeSetting == .enabled)
+        })
     }
     
-    private func readTokenString(fromDeviceToken deviceToken: Data?) -> String? {
-        guard deviceToken != nil else {
-            return nil
-        }
-        
-        return String(data: deviceToken!.base64EncodedData(), encoding: .utf8)?.trimmingCharacters(in: CharacterSet.whitespaces).trimmingCharacters(in: CharacterSet(charactersIn: "<>"))
+    //    private func readTokenString(fromDeviceToken deviceToken: Data?) -> String? {
+    //        guard deviceToken != nil else {
+    //            return nil
+    //        }
+    //
+    //        return String(data: deviceToken!.base64EncodedData(), encoding: .utf8)?.trimmingCharacters(in: CharacterSet.whitespaces).trimmingCharacters(in: CharacterSet(charactersIn: "<>"))
+    //    }
+}
+
+
+extension AppDelegate {
+    func application(_ application: UIApplication, didRegisterForRemoteNotificationsWithDeviceToken deviceToken: Data) {
+        NotificationManager.sharedInstance().application(application, didRegisterForRemoteNotificationsWithDeviceToken: deviceToken)
+    }
+    func application(_ application: UIApplication, didFailToRegisterForRemoteNotificationsWithError error: Error) {
+        NotificationManager.sharedInstance().application(application, didFailToRegisterForRemoteNotificationsWithError: error)
+    }
+    // MARK: remote notification preparation
+    func prepareForNotificationsOfApplication(_ application: UIApplication) {
+        print("call this via a manager, see `NotificationManager.swift`")
+    }
+    // MARK: Remote notification handling
+    func application(_ application: UIApplication, didReceiveRemoteNotification userInfo: [AnyHashable: Any], fetchCompletionHandler completionHandler: @escaping (UIBackgroundFetchResult) -> Void) {
+        NotificationManager.sharedInstance().application(application, didReceiveRemoteNotification: userInfo, fetchCompletionHandler: completionHandler)
+    }
+    func userNotificationCenter(_ center: UNUserNotificationCenter, willPresent notification: UNNotification, withCompletionHandler completionHandler: @escaping (UNNotificationPresentationOptions) -> Void) {
+        NotificationManager.sharedInstance().userNotificationCenter(center, willPresent: notification, withCompletionHandler: completionHandler)
     }
 }
