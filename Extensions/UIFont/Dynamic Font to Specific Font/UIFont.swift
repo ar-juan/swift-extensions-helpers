@@ -15,16 +15,16 @@ extension UIFont {
         var knownTextStyles: [String] =
             [UIFont.TextStyle.body.rawValue,
              UIFont.TextStyle.headline.rawValue,
-            UIFontTextStyle.subheadline.rawValue,
-            UIFontTextStyle.caption1.rawValue,
-            UIFontTextStyle.caption2.rawValue,
-            UIFontTextStyle.footnote.rawValue]
+             UIFont.TextStyle.subheadline.rawValue,
+             UIFont.TextStyle.caption1.rawValue,
+             UIFont.TextStyle.caption2.rawValue,
+             UIFont.TextStyle.footnote.rawValue]
         
         if #available(iOS 9.0, *) {
             let addition: [String] = [UIFont.TextStyle.callout.rawValue,
                                       UIFont.TextStyle.title1.rawValue,
-                                      UIFontTextStyle.title2.rawValue,
-                                      UIFontTextStyle.title3.rawValue]
+                                      UIFont.TextStyle.title2.rawValue,
+                                      UIFont.TextStyle.title3.rawValue]
             knownTextStyles += addition
         }
         

@@ -93,7 +93,7 @@ class LocationManagerController: NSObject, CLLocationManagerDelegate {
                 if popupMessage.goToSetingsActionTitle != nil {
                     alertController.addAction(UIAlertAction(title: popupMessage.goToSetingsActionTitle, style: .default, handler: { (_) in
                         let url: URL = URL(string: UIApplication.openSettingsURLString)!
-                        UIApplication.shared.openURL(url)
+                        UIApplication.shared.open(url, options: [:], completionHandler: nil)
                     }))
                 }
                 alertController.addAction(UIAlertAction(title: popupMessage.dismissActionTitle, style: .default, handler: nil))

@@ -3,15 +3,13 @@
 //  App
 //
 //  Created by Arjan on 28/04/16.
-// Expects iOS 10+
+//
 
 import UIKit
 import UserNotifications
 
 ///////////////////////////// Example implementation
 /*
- import UIKit
- import UserNotifications
 /**
  This app specific notification manager should be used as the central point for
  - registering the app for receiving notifications, both UI based and remote push notifications
@@ -62,6 +60,7 @@ class AppNotificationManager: NotificationManagerDelegate {
 }
 */
 
+
 protocol NotificationManagerDelegate {
     /**
      This function is called when there is a tokenstring available. If for one reason the app gets a new token, this will be called again. There needs to be a delegate troughout the lifetime of the `NotificationManager`.
@@ -92,7 +91,7 @@ protocol NotificationManagerDelegate {
     private override init() {} // prevents others from using the default '()' initializer for this class.
     var delegate: NotificationManagerDelegate?
     static let completionHandlerTimeout: TimeInterval = 10 // seconds
-    
+
     var shouldRegisterForRemoteNotifications = true
     var shouldRegisterForUserNotifications = true
     
@@ -100,7 +99,7 @@ protocol NotificationManagerDelegate {
         static var deviceToken: Data?
         static var registeredForUserNotifications: Bool = false
         static var registeredForRemoteSilentTypeNotifications: Bool = false
-        
+
         static var notificationSettings: UNAuthorizationOptions = [.alert, .badge, .sound]
         
         /**
@@ -124,7 +123,7 @@ protocol NotificationManagerDelegate {
     }
     
     // MARK: remote notification preparation
-    
+ 
     /**
      This function prepares the application for receiving notifications.
      - Requires: a NotificationManager.sharedinstance.delegate object to return the result (token) to
@@ -139,7 +138,7 @@ protocol NotificationManagerDelegate {
         if shouldRegisterForRemoteNotifications {
             self.shouldRegisterForUserNotifications = true // as well
         }
-        
+
         if shouldRegisterForUserNotifications {
             let center = UNUserNotificationCenter.current()
             center.delegate = self
@@ -187,15 +186,15 @@ protocol NotificationManagerDelegate {
                 })
             }
         }
-        
+
     }
     
-    
-    
+
+
     func userNotificationCenter(_ center: UNUserNotificationCenter, openSettingsFor notification: UNNotification?) {
         //
     }
-    
+
     
     // MARK: Remote Notification Registration delegate methods
     /**
@@ -215,9 +214,9 @@ protocol NotificationManagerDelegate {
     // remote AND local
     // iOS 8+
     func application(_ application: UIApplication, didRegisterUserNotificationSettings notificationSettings: UNNotificationSettings) {
-        
+ 
     }
-    
+
     
     //
     func application(_ application: UIApplication, didRegisterForRemoteNotificationsWithDeviceToken deviceToken: Data) {
@@ -329,6 +328,7 @@ protocol NotificationManagerDelegate {
     }
     func userNotificationCenter(_ center: UNUserNotificationCenter, didReceive response: UNNotificationResponse, withCompletionHandler completionHandler: @escaping () -> Void) {
         // TODO implement
+        completionHandler()
     }
     
     
@@ -356,7 +356,7 @@ protocol NotificationManagerDelegate {
          Also see: http://stackoverflow.com/questions/26959472/silent-push-notifications-only-delivered-if-device-is-charging-and-or-app-is-for
          */
         
-        
+
     }
     
     
@@ -377,13 +377,13 @@ protocol NotificationManagerDelegate {
         })
     }
     
-    //    private func readTokenString(fromDeviceToken deviceToken: Data?) -> String? {
-    //        guard deviceToken != nil else {
-    //            return nil
-    //        }
-    //
-    //        return String(data: deviceToken!.base64EncodedData(), encoding: .utf8)?.trimmingCharacters(in: CharacterSet.whitespaces).trimmingCharacters(in: CharacterSet(charactersIn: "<>"))
-    //    }
+//    private func readTokenString(fromDeviceToken deviceToken: Data?) -> String? {
+//        guard deviceToken != nil else {
+//            return nil
+//        }
+//
+//        return String(data: deviceToken!.base64EncodedData(), encoding: .utf8)?.trimmingCharacters(in: CharacterSet.whitespaces).trimmingCharacters(in: CharacterSet(charactersIn: "<>"))
+//    }
 }
 
 
