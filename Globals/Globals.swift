@@ -9,7 +9,7 @@
 import UIKit
 
 struct Globals {
-    static let AppFontFamily = UIFont.preferredFont(forTextStyle: UIFontTextStyle.body).familyName
+    static let AppFontFamily = UIFont.preferredFont(forTextStyle: UIFont.TextStyle.body).familyName
     
     // NSNotification
     static let DatabaseAvailabilityContext: String = "DatabaseAvailabilityContext"

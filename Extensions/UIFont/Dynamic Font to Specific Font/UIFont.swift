@@ -13,16 +13,16 @@ extension UIFont {
         }
         
         var knownTextStyles: [String] =
-        [UIFontTextStyle.body.rawValue,
-            UIFontTextStyle.headline.rawValue,
+            [UIFont.TextStyle.body.rawValue,
+             UIFont.TextStyle.headline.rawValue,
             UIFontTextStyle.subheadline.rawValue,
             UIFontTextStyle.caption1.rawValue,
             UIFontTextStyle.caption2.rawValue,
             UIFontTextStyle.footnote.rawValue]
         
         if #available(iOS 9.0, *) {
-            let addition: [String] = [UIFontTextStyle.callout.rawValue,
-                                      UIFontTextStyle.title1.rawValue,
+            let addition: [String] = [UIFont.TextStyle.callout.rawValue,
+                                      UIFont.TextStyle.title1.rawValue,
                                       UIFontTextStyle.title2.rawValue,
                                       UIFontTextStyle.title3.rawValue]
             knownTextStyles += addition
@@ -46,17 +46,17 @@ extension UIFont {
     internal struct AppFont {
         // developer.apple.com/library/ios/documentation/StringsTextFonts/Conceptual/TextAndWebiPhoneOS/CustomTextProcessing/CustomTextProcessing.html#//apple_ref/doc/uid/TP40009542-CH4-SW65
         static let name = Globals.AppFontFamily /* e.g. "Georgia" */
-        static let Body = AppFont.FromTextStyle(UIFontTextStyle.body.rawValue)
-        static let Headline = AppFont.FromTextStyle(UIFontTextStyle.headline.rawValue)
-        static let SubHeadline = AppFont.FromTextStyle(UIFontTextStyle.subheadline.rawValue)
-        static let Caption1 = AppFont.FromTextStyle(UIFontTextStyle.caption1.rawValue)
-        static let Caption2 = AppFont.FromTextStyle(UIFontTextStyle.caption2.rawValue)
-        static let Footnote = AppFont.FromTextStyle(UIFontTextStyle.footnote.rawValue)
+        static let Body = AppFont.FromTextStyle(UIFont.TextStyle.body.rawValue)
+        static let Headline = AppFont.FromTextStyle(UIFont.TextStyle.headline.rawValue)
+        static let SubHeadline = AppFont.FromTextStyle(UIFont.TextStyle.subheadline.rawValue)
+        static let Caption1 = AppFont.FromTextStyle(UIFont.TextStyle.caption1.rawValue)
+        static let Caption2 = AppFont.FromTextStyle(UIFont.TextStyle.caption2.rawValue)
+        static let Footnote = AppFont.FromTextStyle(UIFont.TextStyle.footnote.rawValue)
         
-        @available(iOS 9.0, *)static let Callout = AppFont.FromTextStyle(UIFontTextStyle.callout.rawValue)
-        @available(iOS 9.0, *) static let Title1 = AppFont.FromTextStyle(UIFontTextStyle.title1.rawValue)
-        @available(iOS 9.0, *) static let Title2 = AppFont.FromTextStyle(UIFontTextStyle.title2.rawValue)
-        @available(iOS 9.0, *) static let Title3 = AppFont.FromTextStyle(UIFontTextStyle.title3.rawValue)
+        @available(iOS 9.0, *)static let Callout = AppFont.FromTextStyle(UIFont.TextStyle.callout.rawValue)
+        @available(iOS 9.0, *) static let Title1 = AppFont.FromTextStyle(UIFont.TextStyle.title1.rawValue)
+        @available(iOS 9.0, *) static let Title2 = AppFont.FromTextStyle(UIFont.TextStyle.title2.rawValue)
+        @available(iOS 9.0, *) static let Title3 = AppFont.FromTextStyle(UIFont.TextStyle.title3.rawValue)
         
         
         /**
@@ -72,14 +72,14 @@ extension UIFont {
          - Returns: a predefined `UIFont` which has the size (or not, see `fontSize`) and other characteristics of the dynamic font style defined in `style`
          */
         static func FromTextStyle(_ style: String, fontSize: CGFloat? = nil) -> UIFont {
-            let dynamicFontDescriptor = UIFontDescriptor.preferredFontDescriptor(withTextStyle: UIFontTextStyle(rawValue: style))
+            let dynamicFontDescriptor = UIFontDescriptor.preferredFontDescriptor(withTextStyle: UIFont.TextStyle(rawValue: style))
             let dynamicFontPointSize = dynamicFontDescriptor.pointSize
-            let dynamicFontIsBold = (dynamicFontDescriptor.symbolicTraits.rawValue & UIFontDescriptorSymbolicTraits.traitBold.rawValue) > 0
-            let dynamicFontIsItalic = (dynamicFontDescriptor.symbolicTraits.rawValue & UIFontDescriptorSymbolicTraits.traitItalic.rawValue) > 0
+            let dynamicFontIsBold = (dynamicFontDescriptor.symbolicTraits.rawValue & UIFontDescriptor.SymbolicTraits.traitBold.rawValue) > 0
+            let dynamicFontIsItalic = (dynamicFontDescriptor.symbolicTraits.rawValue & UIFontDescriptor.SymbolicTraits.traitItalic.rawValue) > 0
             
             var toFontDescriptor = UIFontDescriptor(name: name, size: dynamicFontPointSize)
-            if dynamicFontIsBold { toFontDescriptor = toFontDescriptor.withSymbolicTraits(UIFontDescriptorSymbolicTraits.traitBold)! }
-            if dynamicFontIsItalic { toFontDescriptor = toFontDescriptor.withSymbolicTraits(UIFontDescriptorSymbolicTraits.traitItalic)! }
+            if dynamicFontIsBold { toFontDescriptor = toFontDescriptor.withSymbolicTraits(UIFontDescriptor.SymbolicTraits.traitBold)! }
+            if dynamicFontIsItalic { toFontDescriptor = toFontDescriptor.withSymbolicTraits(UIFontDescriptor.SymbolicTraits.traitItalic)! }
             
             let font = UIFont(descriptor: toFontDescriptor, size: fontSize ?? 0.0)
             
@@ -88,11 +88,11 @@ extension UIFont {
     }
     
     var isBold: Bool {
-        return (fontDescriptor.symbolicTraits.rawValue & UIFontDescriptorSymbolicTraits.traitBold.rawValue) > 0
+        return (fontDescriptor.symbolicTraits.rawValue & UIFontDescriptor.SymbolicTraits.traitBold.rawValue) > 0
     }
     
     var isItalic: Bool {
-        return (fontDescriptor.symbolicTraits.rawValue & UIFontDescriptorSymbolicTraits.traitItalic.rawValue) > 0
+        return (fontDescriptor.symbolicTraits.rawValue & UIFontDescriptor.SymbolicTraits.traitItalic.rawValue) > 0
     }
     
     var styleAttribute: String? {

@@ -10,14 +10,14 @@ import MapKit
 
 struct LocationHelper {
     static func estimatedTravelTimeFromMapItem(_ from: MKMapItem, toMapItem to: MKMapItem, arrival: Date, transportType: MKDirectionsTransportType, completion: @escaping ((_ resultString: String) -> Void)) {
-        let directionsRequest = MKDirectionsRequest()
+        let directionsRequest = MKDirections.Request()
         directionsRequest.transportType = transportType
         directionsRequest.arrivalDate = arrival
         directionsRequest.source = from // MKMapItem(placemark: from)
         directionsRequest.destination = to //MKMapItem(placemark: to)
         
         let directions = MKDirections(request: directionsRequest)
-        directions.calculateETA { (response: MKETAResponse?, error: Error?) in
+        directions.calculateETA { (response: MKDirections.ETAResponse?, error: Error?) in
             if error != nil {
                 logthis("directions error: \(String(describing: error?.localizedDescription))")
                 completion("Onbekend")
