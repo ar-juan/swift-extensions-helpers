@@ -169,7 +169,7 @@ protocol NotificationManagerDelegate {
                     if properties.deviceToken != nil, let tokenString: String = String(data: properties.deviceToken!, encoding: .utf8) /*?.hexString*/ {
                         self.delegate?.prepared(token: tokenString)
                         if self.delegate == nil {
-                            print("Did you forget to set the delegate of the NotificationManager (see example implementation on top of file)?")
+                            print("1 Did you forget to set the delegate of the NotificationManager (see example implementation on top of file)?")
                         }
                     } else {
                         // there's no token yet. In case the user said NO, it will never come
@@ -246,7 +246,7 @@ protocol NotificationManagerDelegate {
             
             delegate?.prepared(token: token)
             if delegate == nil {
-                print("Did you forget to set the delegate of the NotificationManager (see example implementation on top of file)?")
+                print("2 Did you forget to set the delegate of the NotificationManager (see example implementation on top of file)?")
             }
             //UserDefaults.NotificationDeviceToken = tokenString
         } else {
@@ -320,7 +320,7 @@ protocol NotificationManagerDelegate {
     {
         delegate?.handleLocalNotification(notification)
         if delegate == nil {
-            print("Did you forget to set the delegate of the NotificationManager (see example implementation on top of file)?")
+            print("3 Did you forget to set the delegate of the NotificationManager (see example implementation on top of file)?")
         }
         
         //Write you app specific code here
@@ -345,7 +345,7 @@ protocol NotificationManagerDelegate {
             self.runDidReceiveRemoteNotificationFetchCompletionHandler(result)
         })
         if delegate == nil {
-            print("Did you forget to set the delegate of the NotificationManager (see example implementation on top of file)?")
+            print("4 Did you forget to set the delegate of the NotificationManager (see example implementation on top of file)?")
         }
         // Example of delegate implementation:
         // TODO
@@ -384,25 +384,4 @@ protocol NotificationManagerDelegate {
 //
 //        return String(data: deviceToken!.base64EncodedData(), encoding: .utf8)?.trimmingCharacters(in: CharacterSet.whitespaces).trimmingCharacters(in: CharacterSet(charactersIn: "<>"))
 //    }
-}
-
-
-extension AppDelegate {
-    func application(_ application: UIApplication, didRegisterForRemoteNotificationsWithDeviceToken deviceToken: Data) {
-        NotificationManager.sharedInstance().application(application, didRegisterForRemoteNotificationsWithDeviceToken: deviceToken)
-    }
-    func application(_ application: UIApplication, didFailToRegisterForRemoteNotificationsWithError error: Error) {
-        NotificationManager.sharedInstance().application(application, didFailToRegisterForRemoteNotificationsWithError: error)
-    }
-    // MARK: remote notification preparation
-    func prepareForNotificationsOfApplication(_ application: UIApplication) {
-        print("call this via a manager, see `NotificationManager.swift`")
-    }
-    // MARK: Remote notification handling
-    func application(_ application: UIApplication, didReceiveRemoteNotification userInfo: [AnyHashable: Any], fetchCompletionHandler completionHandler: @escaping (UIBackgroundFetchResult) -> Void) {
-        NotificationManager.sharedInstance().application(application, didReceiveRemoteNotification: userInfo, fetchCompletionHandler: completionHandler)
-    }
-    func userNotificationCenter(_ center: UNUserNotificationCenter, willPresent notification: UNNotification, withCompletionHandler completionHandler: @escaping (UNNotificationPresentationOptions) -> Void) {
-        NotificationManager.sharedInstance().userNotificationCenter(center, willPresent: notification, withCompletionHandler: completionHandler)
-    }
 }

@@ -105,7 +105,7 @@ private class ConnectionManager {
             // Clean up any unfinished task business by marking where you
             // stopped or ending the task outright.
             application.endBackgroundTask(bgTask!)
-                bgTask = UIBackgroundTaskIdentifier.invalid
+                bgTask = UIBackgroundTaskInvalid
         })
         
         
@@ -127,7 +127,7 @@ private class ConnectionManager {
                 completionHandler(data, response, error, request)
                 
                 application.endBackgroundTask(bgTask!)
-                bgTask = UIBackgroundTaskIdentifier.invalid;
+                bgTask = UIBackgroundTaskInvalid;
             })
             task.resume()
         }) 
@@ -166,7 +166,7 @@ private class ConnectionManager {
             // Clean up any unfinished task business by marking where you
             // stopped or ending the task outright.
             application.endBackgroundTask(bgTask!)
-                bgTask = UIBackgroundTaskIdentifier.invalid
+                bgTask = UIBackgroundTaskInvalid
         })
         
         // Start the long-running task and return immediately.
@@ -183,7 +183,7 @@ private class ConnectionManager {
                 completionHandler(data, response, error)
 
                 application.endBackgroundTask(bgTask!)
-                bgTask = UIBackgroundTaskIdentifier.invalid;
+                bgTask = UIBackgroundTaskInvalid
             })
             task.resume()
         }) 
