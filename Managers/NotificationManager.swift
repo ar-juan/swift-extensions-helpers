@@ -81,6 +81,11 @@ protocol NotificationManagerDelegate {
      `notification.userInfo` contains the data related to this `notification`
      */
     func handleLocalNotification(_ notification: UNNotification)
+    
+    /**
+     This method is called when the user touched a notification by which the app opens.
+     */
+    func handleUserResponse(_ response: UNNotificationResponse)
 }
 @objc class NotificationManager: NSObject, UNUserNotificationCenterDelegate {
     // like this the sharedInstance class method can be reached from ObjC.
@@ -327,7 +332,7 @@ protocol NotificationManagerDelegate {
         completionHandler([.alert, .sound]) //execute the provided completion handler block with the delivery option (if any) that you want the system to use. If you do not specify any options, the system silences the notification.
     }
     func userNotificationCenter(_ center: UNUserNotificationCenter, didReceive response: UNNotificationResponse, withCompletionHandler completionHandler: @escaping () -> Void) {
-        // TODO implement
+        delegate?.handleUserResponse(response)
         completionHandler()
     }
     
